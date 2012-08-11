@@ -16,5 +16,9 @@ object todo {
 }
 
 class DatabaseBackedAddressMapper(db:Database) extends AddressMapper {
-  override def map(id:String): Option[Address] = todo.it 
+  override def map(id:String): Option[Address] = { 
+    printf("id is %s, db.find is %s\n", 
+        id, db.find(id));
+    Some(Address(10,Street("xyz")))
+  }
 }
