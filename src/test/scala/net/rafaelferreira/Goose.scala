@@ -37,9 +37,7 @@ trait Goose {this: Specification =>
     def then(expectedExpression: T => MatchResult[Any]): When[T] = {
       state.setup
       
-      val got = resultExpression()
-      
-      val thisExample = eg(expectedExpression(got))
+      val thisExample = eg(expectedExpression(resultExpression()))
       
       this.copy(newFragments = fragments add thisExample)
     }
