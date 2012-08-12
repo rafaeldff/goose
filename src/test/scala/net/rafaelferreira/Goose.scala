@@ -9,7 +9,7 @@ import org.specs2.Specification
 import org.specs2.matcher.MatchResult
 
 trait Goose {this: Specification =>
-  val mocker = new org.specs2.mock.MockitoMocker {} // This is specs2 thin integration layer over Mockito
+  val mocker = new org.specs2.mock.MockitoMocker {}
   
   trait Assumption {
     def init: Unit
@@ -32,7 +32,7 @@ trait Goose {this: Specification =>
     
     def but(context: When[T] => When[T]): When[T] = {
       val subWhen = context(this)
-      copy(newFragments = fragments add subWhen.results)
+      copy(newFragments = subWhen.results)
     }
     
     def then(expectedExpression: T => MatchResult[Any]): When[T] = {
@@ -45,7 +45,7 @@ trait Goose {this: Specification =>
     }
     
     def results: Fragments = fragments
-    def copy(newResultExpression: () => T = resultExpression, newState: State = state, newFragments:Fragments = Fragments()) =
+    def copy(newResultExpression: () => T = resultExpression, newState: State = state, newFragments:Fragments = fragments) =
       new When(newResultExpression, newState, newFragments)
     
   }
