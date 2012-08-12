@@ -1,4 +1,5 @@
 package net.rafaelferreira
+
 import org.specs2
 import org.specs2.specification.Fragments
 import org.specs2.execute.Result
@@ -35,15 +36,16 @@ trait Goose {this: Specification =>
     }
     
     def then(expectedExpression: T => MatchResult[Any]): When[T] = {
-      state.setup
-      
-      val thisExample = eg(expectedExpression(resultExpression()))
+      val thisExample = eg {
+        state.setup
+        expectedExpression(resultExpression())
+      }
       
       this.copy(newFragments = fragments add thisExample)
     }
     
     def results: Fragments = fragments
-    def copy(newResultExpression: () => T = resultExpression, newState: State = new State(), newFragments:Fragments = Fragments()) =
+    def copy(newResultExpression: () => T = resultExpression, newState: State = state, newFragments:Fragments = Fragments()) =
       new When(newResultExpression, newState, newFragments)
     
   }
@@ -63,51 +65,21 @@ trait Goose {this: Specification =>
     
     class Stubbing[R](call: T => R) {
       def ==>(r:R) = new Assumption {
-        def init = {  
-          lazy val mock: T = mocker.mock(implicitly[ClassManifest[T]])
-          result = Some(result.getOrElse(mock))
-        }
+        def init = result = Some(mocker.mock(implicitly[ClassManifest[T]]))
         def apply = result.foreach(mockResult => mocker.when(call(mockResult)).thenReturn(r))
       }
     }
     
-    def stub[R](call: T => R) = new Stubbing[R](call) 
-   
+    def stub[R](call: T => R) = new Stubbing[R](call)
+
+    override def toString = "DEP[%s]" format result
   }
   
   def dep[T: ClassManifest]: Dependency[T] = new Dependency[T]
   
   def check[T](resultExpression: => T)(c: When[T] => When[T]): Fragments = 
-    c(new When(() => resultExpression)).results
+    args(sequential=true) ^ c(new When(() => resultExpression)).results
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -5,7 +5,9 @@ case class City(name:String)
 case class Address(city:City, street:Street)
 
 trait AddressMapper {
-  def map(id:String): Option[Address]
+  def mapStreet(id:String): Option[Street]
+  def mapCity(id:String): Option[City]
+  def mapAddress(id:String): Option[Address]
 }
 
 trait Database {
@@ -17,7 +19,15 @@ object todo {
 }
 
 class DatabaseBackedAddressMapper(db:Database) extends AddressMapper {
-  override def map(id:String): Option[Address] = { 
+  def mapStreet(id:String): Option[Street] = 
+    for (record <- db.find("streets", id))
+      yield Street(record("name"))  
+    
+  def mapCity(id:String): Option[City] =
+    for (record <- db.find("cities", id))
+      yield City(record("name "))
+
+  override def mapAddress(id:String): Option[Address] = { 
     for (address <- db.find("addresses", id);
          city <- db.find("cities", address("city"));
          street <- db.find("streets", address("street")))
