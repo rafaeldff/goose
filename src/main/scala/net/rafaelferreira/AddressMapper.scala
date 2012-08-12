@@ -1,14 +1,15 @@
 package net.rafaelferreira
 
 case class Street(streetName: String)
-case class Address(number:Int, street:Street)
+case class City(name:String)
+case class Address(city:City, street:Street)
 
 trait AddressMapper {
   def map(id:String): Option[Address]
 }
 
 trait Database {
-  def find(id:String): Option[Map[String,String]]
+  def find(table:String, id:String): Option[Map[String,String]]
 }
 
 object todo {
@@ -18,7 +19,7 @@ object todo {
 class DatabaseBackedAddressMapper(db:Database) extends AddressMapper {
   override def map(id:String): Option[Address] = { 
     printf("id is %s, db.find is %s\n", 
-        id, db.find(id));
-    Some(Address(10,Street("xyz")))
+        id, db.find("a" , id));
+    Some(Address(City("Curitiba"),Street("xyz")))
   }
 }
