@@ -1,9 +1,7 @@
 package net.rafaelferreira
-import org.specs2.mock.MockitoMocker
-import org.mockito.stubbing.OngoingStubbing
 
 trait Goose {
-  val mocker = new MockitoMocker {}
+  val mocker = new org.specs2.mock.MockitoMocker {} // This is specs2 thin integration layer over Mockito
   
   trait Assumption {
     def init: Unit
@@ -55,13 +53,17 @@ trait Goose {
       def apply = ()
     }
     
-    def stub[R](call: T => R, r:R) = new Assumption {
-      def init = {  
-        lazy val mock: T = mocker.mock(implicitly[ClassManifest[T]])
-        result = Some(result.getOrElse(mock))
+    class Stubbing[R](call: T => R) {
+      def ==>(r:R) = new Assumption {
+        def init = {  
+          lazy val mock: T = mocker.mock(implicitly[ClassManifest[T]])
+          result = Some(result.getOrElse(mock))
+        }
+        def apply = result.foreach(mockResult => mocker.when(call(mockResult)).thenReturn(r))
       }
-      def apply = result.foreach(mockResult => mocker.when(call(mockResult)).thenReturn(r))
     }
+    
+    def stub[R](call: T => R) = new Stubbing[R](call) 
    
   }
   
@@ -77,14 +79,14 @@ class AddressMapperTest extends Goose {
 
   check(new DatabaseBackedAddressMapper(database()).map(id())) {
     _.when(id ==> "123").
-      and(database.stub(_.find("addresses", "123"), Some(Map("city" -> "789", "street" -> "999")))).
-      and(database.stub(_.find("cities", "789"), Some(Map("name" -> "Curitiba")))).
+      and(database.stub(_.find("addresses", "123")) ==> Some(Map("city" -> "789", "street" -> "999"))).
+      and(database.stub(_.find("cities", "789")) ==> Some(Map("name" -> "Curitiba"))).
       but {
-        _.when(database.stub(_.find("streets", "999"), None)).
+        _.when(database.stub(_.find("streets", "999")) ==>  None).
         then(None)
       }.
       but {
-        _.when(database.stub(_.find("streets", "999"), Some(Map("name" -> "St. st.")))).
+        _.when(database.stub(_.find("streets", "999")) ==> Some(Map("name" -> "St. st."))).
         then(Some(Address(City("Curitiba"), Street("St. st."))))
       }
   }
