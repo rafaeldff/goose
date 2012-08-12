@@ -1,4 +1,8 @@
 package net.rafaelferreira
+import org.specs2
+import org.specs2.specification.Fragments
+import org.specs2.execute.Result
+import org.specs2.specification.Example
 
 trait Goose {
   val mocker = new org.specs2.mock.MockitoMocker {} // This is specs2 thin integration layer over Mockito
@@ -18,26 +22,29 @@ trait Goose {
     }
   }
   
-  class When[T](resultExpression: => T, state: State = new State()) {
-    def when(assumption: Assumption): When[T] = 
-      new When(resultExpression, state.assuming(assumption))
-    
+  class When[T](resultExpression: () => T, state: State = new State(), fragments:Fragments = Fragments()) {
+    def when(assumption: Assumption): When[T] = copy(newState = state.assuming(assumption)) 
     def and(assumption: Assumption): When[T] = when(assumption)
     
-    def but(context: When[T] => Unit): When[T] = {
-      context(this)
-      this
+    def but(context: When[T] => When[T]): When[T] = {
+      val subWhen = context(this)
+      copy(newFragments = fragments add subWhen.results)
     }
     
-    def then(expected: T): Unit = {
+    def then(expectedExpression: T => Result): When[T] = {
       state.setup
       
-      val got = resultExpression
-      if (got == expected)
-        println("ok!")
-      else
-        printf("Fail! expected %s but got %s\n", expected, got)
+      val got = resultExpression()
+      
+      val thisExample = Example("<todo>", expectedExpression(got))
+      
+      this.copy(newFragments = fragments add thisExample)
     }
+    
+    def results: Fragments = fragments
+    def copy(newResultExpression: () => T = resultExpression, newState: State = new State(), newFragments:Fragments = Fragments()) =
+      new When(newResultExpression, newState, newFragments)
+    
   }
   
   class Dependency[T: ClassManifest] {
@@ -69,7 +76,8 @@ trait Goose {
   
   def dep[T: ClassManifest]: Dependency[T] = new Dependency[T]
   
-  def check[T](resultExpression: => T)(c: When[T] => Unit) = c(new When(resultExpression))
+  def check[T](resultExpression: => T)(c: When[T] => When[T]): Fragments = 
+    c(new When(() => resultExpression)).results
 }
 
 
