@@ -22,7 +22,7 @@ trait Goose {this: Specification =>
     
     def setup = {
       assumptions.foreach(_.init)
-      assumptions.foreach(_.apply)
+      assumptions.reverse.foreach(_.apply)
     }
   }
   

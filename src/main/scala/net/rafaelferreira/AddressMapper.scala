@@ -34,3 +34,5 @@ class DatabaseBackedAddressMapper(db:Database) extends AddressMapper {
     yield Address(City(city("name")),Street(street("name")))
   }
 }
+
+trait Foo {def foo: String}
