@@ -18,8 +18,9 @@ object todo {
 
 class DatabaseBackedAddressMapper(db:Database) extends AddressMapper {
   override def map(id:String): Option[Address] = { 
-    printf("id is %s, db.find is %s\n", 
-        id, db.find("a" , id));
-    Some(Address(City("Curitiba"),Street("xyz")))
+    for (address <- db.find("addresses", id);
+         city <- db.find("cities", address("city"));
+         street <- db.find("streets", address("street")))
+    yield Address(City(city("name")),Street(street("name")))
   }
 }
