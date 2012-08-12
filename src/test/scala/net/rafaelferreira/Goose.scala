@@ -3,8 +3,11 @@ import org.specs2
 import org.specs2.specification.Fragments
 import org.specs2.execute.Result
 import org.specs2.specification.Example
+import org.specs2.execute.DecoratedResult
+import org.specs2.Specification
+import org.specs2.matcher.MatchResult
 
-trait Goose {
+trait Goose {this: Specification =>
   val mocker = new org.specs2.mock.MockitoMocker {} // This is specs2 thin integration layer over Mockito
   
   trait Assumption {
@@ -31,12 +34,12 @@ trait Goose {
       copy(newFragments = fragments add subWhen.results)
     }
     
-    def then(expectedExpression: T => Result): When[T] = {
+    def then(expectedExpression: T => MatchResult[Any]): When[T] = {
       state.setup
       
       val got = resultExpression()
       
-      val thisExample = Example("<todo>", expectedExpression(got))
+      val thisExample = eg(expectedExpression(got))
       
       this.copy(newFragments = fragments add thisExample)
     }
