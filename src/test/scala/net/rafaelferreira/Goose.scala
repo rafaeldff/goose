@@ -77,8 +77,11 @@ trait Goose {this: Specification =>
   
   def dep[T: ClassManifest]: Dependency[T] = new Dependency[T]
   
-  def check[T](resultExpression: => T)(c: When[T] => When[T]): Fragments = 
-    args(sequential=true) ^ c(new When(() => resultExpression)).results
+  def when[R](assumption: Assumption):When[R] =  
+    new When[R](sys.error("todo")).when(assumption)
+  
+  def check[T1:ClassManifest,T2:ClassManifest,R](resultExpression: (T1, T2) => R)(c: (Dependency[T1], Dependency[T2]) => When[R] => When[R]): Fragments = 
+    args(sequential=true) ^ c(dep[T1], dep[T2])(new When[R](sys.error("todo"))).results
 }
 
 

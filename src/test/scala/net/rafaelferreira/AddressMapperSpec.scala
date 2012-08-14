@@ -3,12 +3,12 @@ package net.rafaelferreira
 import org.specs2.Specification
 
 class AddressMapperSpec extends Specification with Goose {
-  val addressId = dep[String]
-  val database = dep[Database]
+//  val addressId = dep[String]
+//  val database = dep[Database]
   
-  def is = "sample object mapping specification" ^ `address mapping` ^ `street mapping`
+  def is = "sample object mapping specification" ^ `street mapping`
     
-  def `address mapping` = check(new DatabaseBackedAddressMapper(database()).mapAddress(addressId())) {
+  /*def `address mapping` = check(new DatabaseBackedAddressMapper(database()).mapAddress(addressId())) {
     _.when(addressId ==> "123").
       and(database.stub(_.find("addresses", "123")) ==> Some(Map("city" -> "789", "street" -> "999"))).
       and(database.stub(_.find("cities", "789")) ==> Some(Map("name" -> "Curitiba"))).
@@ -22,15 +22,15 @@ class AddressMapperSpec extends Specification with Goose {
         _.when(database.stub(_.find("cities", "789")) ==> None).
           then(_ must beNone)
       }
-  }
+  }*/
   
-  val streetId = dep[String]
+//  val streetId = dep[String]
   
-  def `street mapping` = check(new DatabaseBackedAddressMapper(database()).mapStreet(streetId())) {
+  def `street mapping` = check(new DatabaseBackedAddressMapper(_:Database).mapStreet(_:String)) {(database, streetId) =>
     _.when(streetId ==> "951").
-      and(database.stub(_.find("streets", "951")) ==> Some(Map("name" -> "St. st."))).
-      then(_ must beSome(Street("St. st.")))
-      .but {
+    and(database.stub(_.find("streets", "951")) ==> Some(Map("name" -> "St. st."))).
+      then(_ must beSome(Street("St. st."))).
+      but {
         _.when(database.stub(_.find("streets", "951")) ==>  None).
           then(_ must_== None)
       }
