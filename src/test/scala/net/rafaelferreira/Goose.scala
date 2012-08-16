@@ -7,50 +7,19 @@ import org.specs2.specification.Example
 import org.specs2.execute.DecoratedResult
 import org.specs2.Specification
 import org.specs2.matcher.MatchResult
+import org.specs2.specification.Fragment
 
 trait Goose {this: Specification =>
+  import scala.collection.immutable.Map
+  
   val mocker = new org.specs2.mock.MockitoMocker {}
   
-  trait Assumption {
-    def init: Unit
-    def apply: Unit
+  trait Assumption[T] {
+    def relatedTo: Dependency[T]
+    def apply(previous:Option[T]):Option[T]
   }
   
-  class State(assumptions: Seq[Assumption] = Seq()) {
-    def assuming(assumption:Assumption) = 
-      new State(assumption +: assumptions)
-    
-    def setup = {
-      assumptions.foreach(_.init)
-      assumptions.reverse.foreach(_.apply)
-    }
-  }
-  
-  class When[T](resultExpression: () => T, state: State = new State(), fragments:Fragments = Fragments()) {
-    def when(assumption: Assumption): When[T] = copy(newState = state.assuming(assumption)) 
-    def and(assumption: Assumption): When[T] = when(assumption)
-    
-    def but(context: When[T] => When[T]): When[T] = {
-      val subWhen = context(this)
-      copy(newFragments = subWhen.results)
-    }
-    
-    def then(expectedExpression: T => MatchResult[Any]): When[T] = {
-      val thisExample = eg {
-        state.setup
-        expectedExpression(resultExpression())
-      }
-      
-      this.copy(newFragments = fragments add thisExample)
-    }
-    
-    def results: Fragments = fragments
-    def copy(newResultExpression: () => T = resultExpression, newState: State = state, newFragments:Fragments = fragments) =
-      new When(newResultExpression, newState, newFragments)
-    
-  }
-  
-  class Dependency[T: ClassManifest] {
+  class Dependency[T: ClassManifest] {self =>
     var result: Option[T] = None
     
     def apply():T = result match {
@@ -58,15 +27,22 @@ trait Goose {this: Specification =>
       case None => throw new RuntimeException("Dependency wasn't setup properly")
     } 
     
-    def ==>(value: T): Assumption = new Assumption {
-      def init = result = Some(value)
-      def apply = ()
+    def ==>(value: T): Assumption[T] = new Assumption[T] {
+      def relatedTo = self
+      def apply = _ => Some(value)
     }
     
     class Stubbing[R](call: T => R) {
-      def ==>(r:R) = new Assumption {
-        def init = result = Some(mocker.mock(implicitly[ClassManifest[T]]))
-        def apply = result.foreach(mockResult => mocker.when(call(mockResult)).thenReturn(r))
+      def ==>(r:R) = new Assumption[T] {
+        def relatedTo = self
+        def apply(previous:Option[T]) = {
+          val mock = previous match {
+            case None => mocker.mock(implicitly[ClassManifest[T]])
+            case Some(mock) => mock
+          }
+          mocker.when(call(mock)).thenReturn(r)
+          Some(mock)
+        }
       }
     }
     
@@ -75,13 +51,65 @@ trait Goose {this: Specification =>
     override def toString = "DEP[%s]" format result
   }
   
+  type DepGen[T] = Option[T] => Option[T]
+  
+  class State(assumptions: Map[Dependency[_], Any] = Map().withDefaultValue((_:Any) => None)) {
+    def assuming[T](assumption:Assumption[T]) = { 
+      val newDep: Dependency[T] = assumption.relatedTo
+      val newGen: DepGen[T] = assumption.apply _
+      
+      val oldGen = get(newDep)
+      
+      new State(assumptions + (newDep -> (oldGen andThen newGen)))
+    }
+    
+    def get[T](dep: Dependency[T]): DepGen[T] = {
+      assumptions.get(dep).asInstanceOf[DepGen[T]]
+    }
+      
+    
+    def setup = {
+    }
+      
+  }
+  
+  type ResultThunk[R]  = () => R
+  type Then[R] = ResultThunk[R] => Fragment 
+  
+  class When[R](state: State = new State(), val fragments:Seq[Then[R]] = Vector()) {
+    
+    def when[T](assumption: Assumption[T]): When[R] = copy(newState = state.assuming(assumption)) 
+    def and[T](assumption: Assumption[T]): When[R] = when(assumption)
+    
+    def but(context: When[R] => When[R]): When[R] = {
+      val subWhen = context(this)
+      copy(newFragments = subWhen.fragments)
+    }
+    
+    def then(expectedExpression: R => MatchResult[Any]): When[R] = {
+      val thisExample:Then[R] = {resultExpression => 
+        eg { expectedExpression(resultExpression()) }
+      }
+      
+      this.copy(newFragments = fragments :+ thisExample)
+    }
+    
+    def results(resultExpression: ResultThunk[R]): Fragments = {
+      val seqOfFragments = for (then <- fragments) yield {
+        then(resultExpression)
+      }
+      Fragments.create (seqOfFragments:_*)
+    }
+    
+    def copy(newState: State = state, newFragments:Seq[Then[R]] = fragments) =
+      new When(newState, newFragments)
+    
+  }
+  
   def dep[T: ClassManifest]: Dependency[T] = new Dependency[T]
   
-  def when[R](assumption: Assumption):When[R] =  
-    new When[R](sys.error("todo")).when(assumption)
-  
   def check[T1:ClassManifest,T2:ClassManifest,R](resultExpression: (T1, T2) => R)(c: (Dependency[T1], Dependency[T2]) => When[R] => When[R]): Fragments = 
-    args(sequential=true) ^ c(dep[T1], dep[T2])(new When[R](sys.error("todo"))).results
+    c(dep[T1], dep[T2])(new When[R]()).results(sys.error("todo"))
 }
 
 
