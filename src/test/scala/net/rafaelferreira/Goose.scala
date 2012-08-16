@@ -29,7 +29,7 @@ trait Goose {this: Specification =>
     
     def ==>(value: T): Assumption[T] = new Assumption[T] {
       def relatedTo = self
-      def apply = _ => Some(value)
+      def apply(previous:Option[T]) = Some(value)
     }
     
     class Stubbing[R](call: T => R) {
@@ -58,19 +58,17 @@ trait Goose {this: Specification =>
       val newDep: Dependency[T] = assumption.relatedTo
       val newGen: DepGen[T] = assumption.apply _
       
-      val oldGen = get(newDep)
+      val oldGen = getDepGen(newDep)
       
       new State(assumptions + (newDep -> (oldGen andThen newGen)))
     }
     
-    def get[T](dep: Dependency[T]): DepGen[T] = {
-      assumptions.get(dep).asInstanceOf[DepGen[T]]
+    private def getDepGen[T](dep: Dependency[T]): DepGen[T] = {
+      assumptions(dep).asInstanceOf[DepGen[T]]
     }
-      
     
-    def setup = {
-    }
-      
+    def get[T](dep:Dependency[T]): Option[T] = 
+      getDepGen(dep)(None)
   }
   
   type ResultThunk[R]  = () => R
@@ -94,9 +92,9 @@ trait Goose {this: Specification =>
       this.copy(newFragments = fragments :+ thisExample)
     }
     
-    def results(resultExpression: ResultThunk[R]): Fragments = {
-      val seqOfFragments = for (then <- fragments) yield {
-        then(resultExpression)
+    def results(resultExpression: State => R): Fragments = {
+      val seqOfFragments = for (thenFragment <- fragments) yield {
+        thenFragment(() => resultExpression(state))
       }
       Fragments.create (seqOfFragments:_*)
     }
@@ -108,8 +106,11 @@ trait Goose {this: Specification =>
   
   def dep[T: ClassManifest]: Dependency[T] = new Dependency[T]
   
-  def check[T1:ClassManifest,T2:ClassManifest,R](resultExpression: (T1, T2) => R)(c: (Dependency[T1], Dependency[T2]) => When[R] => When[R]): Fragments = 
-    c(dep[T1], dep[T2])(new When[R]()).results(sys.error("todo"))
+  def check[T1: ClassManifest, T2: ClassManifest, R](resultExpression: (T1, T2) => R)(c: (Dependency[T1], Dependency[T2]) => When[R] => When[R]): Fragments = {
+    val dep1 = dep[T1]
+    val dep2 = dep[T2]
+    c(dep1, dep2)(new When[R]()).results { (state:State) => resultExpression(state.get(dep1).get, state.get(dep2).get) }
+  }
 }
 
 
