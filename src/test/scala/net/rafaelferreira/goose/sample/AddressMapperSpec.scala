@@ -1,8 +1,9 @@
-package net.rafaelferreira
+package net.rafaelferreira.goose
+package sample
 
 import org.specs2.Specification
 
-class AddressMapperSpec extends Specification with Goose {
+class AddressMapperSpec extends Specification with net.rafaelferreira.Goose {
 //  val addressId = dep[String]
 //  val database = dep[Database]
   

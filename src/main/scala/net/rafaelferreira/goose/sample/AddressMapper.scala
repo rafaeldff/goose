@@ -1,4 +1,5 @@
-package net.rafaelferreira
+package net.rafaelferreira.goose
+package sample
 
 case class Street(streetName: String)
 case class City(name:String)
