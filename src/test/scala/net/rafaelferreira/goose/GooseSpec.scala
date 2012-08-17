@@ -6,21 +6,21 @@ import org.specs2.execute._
 
 
 class GooseSpec extends Specification with ResultMatchers with Goose {
-  def is = "Specifying goose itself" ^
-            `variable assumption passing` ^
-            `variable assumption failing` ^ 
-            `stub assumption passing` ^
-            `stub assumption failing` ^
-            `mixed assumptions passing`
+  def is = "Specifying goose itself"        ^
+           "variable assumption passing"    ^ e1 ^
+           "variable assumption failing"    ^ e2 ^ 
+           "stub assumption passing"        ^ e3 ^
+           "stub assumption failing"        ^ e4 ^
+            "mixed assumptions passing"     ^ e5
   
-  def `variable assumption passing` = "variable assumption passing" ^
+  def e1 = 
     check({(x:String,y:String) => x+y}) {(value, y) => 
       _.when(value ==> "as").
         and(y ==> "df").
         then(_ must_== "asdf")
     }
   
-  def `variable assumption failing` = "variable assumption failing" ^ {
+  def e2 = {
     val fragments = check({ (x: String, y: String) => x + y }) { (value, y) =>
       _.when(value ==> "xx").
         when(y ==> "xx").
@@ -29,7 +29,7 @@ class GooseSpec extends Specification with ResultMatchers with Goose {
     fragments.examples.head.execute must be failing
   }
     
-  def `stub assumption passing` = "stub assumption passing" ^ {
+  def e3 = {
     trait Foo {def foo:String}
     trait Bar {def bar:String}
     
@@ -40,7 +40,7 @@ class GooseSpec extends Specification with ResultMatchers with Goose {
     }
   }
   
-  def `stub assumption failing` = "stub assumption failing" ^ {
+  def e4 = {
     trait Foo {def foo:String}
     trait Bar {def bar:String}
     
@@ -53,7 +53,7 @@ class GooseSpec extends Specification with ResultMatchers with Goose {
     fragments.examples.head.execute must be failing
   }
   
-  def `mixed assumptions passing` = "mixed assumptions passing" ^ {
+  def e5 = {
     trait Foo {def foo:String}
     
     check((_:Foo).foo + (_:String)) {(foo, str) => 
