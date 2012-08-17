@@ -6,12 +6,17 @@ import org.specs2.execute._
 
 
 class GooseSpec extends Specification with ResultMatchers with Goose {
-  def is = "Specifying goose itself"        ^
-           "variable assumption passing"    ^ e1 ^
-           "variable assumption failing"    ^ e2 ^ 
-           "stub assumption passing"        ^ e3 ^
-           "stub assumption failing"        ^ e4 ^
-            "mixed assumptions passing"     ^ e5
+    def is = "Specifying goose itself"          ^
+             "variable assumption passing"      ^ e1 ^
+             "variable assumption failing"      ^ e2 ^ 
+             "stub assumption passing"          ^ e3 ^
+             "stub assumption failing"          ^ e4 ^
+             "mixed assumptions passing"        ^ e5 ^
+             "variable assumption overriding"   ^ e6 ^ 
+             "mock assumption overriding"       ^ e7 ^
+             "checking in outer and in inner"   ^ e8 ^
+             "outer passing and inner failing"  ^ e9 ^
+             "inner passing and outer failing"  ^ e10
   
   def e1 = 
     check({(x:String,y:String) => x+y}) {(value, y) => 
@@ -62,6 +67,69 @@ class GooseSpec extends Specification with ResultMatchers with Goose {
         then(_ must_== "asdf")
     }
   }
+  
+  def e6 = check((_:String)+(_:String)) {(x,y) => _.
+    when(x ==> "a").
+    and(y ==> "b").but {
+      _.and(x ==> "R").
+        then(_ must_== "Rb")
+    }
+  }
 
+  def e7 = {
+    trait Foo {def foo:String}
+    trait Bar {def bar:String}
+    
+    check((_:Foo).foo + (_:Bar).bar) {(foo, bar) => 
+      _.when(foo.stub(_.foo) ==> "as").
+        and(bar.stub(_.bar) ==> "df").
+        but {
+          _.and(foo.stub(_.foo) ==> "R").
+            then(_ must_== "Rdf")
+        }
+    }
+  }
+  
+  def e8 = 
+    check((_:String) + (_:String)) {(x, y) => 
+      _.when(x ==> "as").
+        and(y  ==> "df").
+        then(_ must_== "asdf").
+        but {
+          _.and(x ==> "R").
+            then(_ must_== "Rdf")
+        }
+    }
+  
+  def e9 = {
+    val fragments = check((_:String) + (_:String)) {(x, y) => 
+      _.when(x ==> "as").
+        and(y  ==> "df").
+        then(_ must_== "asdf").
+        but {
+          _.and(x ==> "R").
+            then(_ must_== "qwerty")
+        }
+    }
+    
+    (fragments.examples(0).execute must beSuccessful) and
+    (fragments.examples(1).execute must beFailing)
+  }
+  
+  def e10 = {
+    val fragments = check((_:String) + (_:String)) {(x, y) => 
+      _.when(x ==> "as").
+        and(y  ==> "df").
+        then(_ must_== "qwerty").
+        but {
+          _.and(x ==> "R").
+            then(_ must_== "Rdf")
+        }
+    }
+    
+    (fragments.examples(1).execute must beSuccessful) and
+    (fragments.examples(0).execute must beFailing)
+  }
+  
 
 }
