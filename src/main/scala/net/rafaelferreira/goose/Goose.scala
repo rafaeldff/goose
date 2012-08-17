@@ -75,7 +75,7 @@ trait Goose {this: Specification =>
   type ResultThunk[R]  = () => R
   type Then[R] = ResultThunk[R] => Fragment 
   
-  class When[R](state: State = new State(), val fragments:Seq[Then[R]] = Vector()) {
+  class When[R](state: State = new State(), val fragments:Fragments = Fragments())(resultExpression: State => R) {
     
     def when[T](assumption: Assumption[T]): When[R] = copy(newState = state.assuming(assumption)) 
     def and[T](assumption: Assumption[T]): When[R] = when(assumption)
@@ -86,22 +86,15 @@ trait Goose {this: Specification =>
     }
     
     def then(expectedExpression: R => MatchResult[Any]): When[R] = {
-      val thisExample:Then[R] = {resultExpression => 
-        eg { expectedExpression(resultExpression()) }
-      }
+      val thisExample = eg { expectedExpression(resultExpression(state)) }
       
-      this.copy(newFragments = fragments :+ thisExample)
+      this.copy(newFragments = fragments add thisExample)
     }
     
-    def results(resultExpression: State => R): Fragments = {
-      val seqOfFragments = for (thenFragment <- fragments) yield {
-        thenFragment(() => resultExpression(state))
-      }
-      Fragments.create (seqOfFragments:_*)
-    }
+    def results: Fragments = fragments
     
-    def copy(newState: State = state, newFragments:Seq[Then[R]] = fragments) =
-      new When(newState, newFragments)
+    def copy(newResultExpression: (State => R) = resultExpression, newState: State = state, newFragments:Fragments = fragments) =
+      new When(newState, newFragments)(newResultExpression)
     
   }
   
@@ -110,7 +103,8 @@ trait Goose {this: Specification =>
   def check[T1: ClassManifest, T2: ClassManifest, R](resultExpression: (T1, T2) => R)(c: (Dependency[T1], Dependency[T2]) => When[R] => When[R]): Fragments = {
     val dep1 = dep[T1]
     val dep2 = dep[T2]
-    c(dep1, dep2)(new When[R]()).results { (state:State) => resultExpression(state.get(dep1).get, state.get(dep2).get) }
+    val when = new When[R]()((state:State) => resultExpression(state.get(dep1).get, state.get(dep2).get))
+    c(dep1, dep2)(when).results
   }
 }
 
