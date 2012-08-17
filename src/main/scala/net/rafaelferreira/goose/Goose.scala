@@ -1,4 +1,5 @@
 package net.rafaelferreira
+package goose
 
 import org.specs2
 import org.specs2.specification.Fragments
