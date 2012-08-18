@@ -104,7 +104,7 @@ trait Goose {this: Specification =>
     val dep1 = dep[T1]
     val dep2 = dep[T2]
     val when = new When[R]()((state:State) => resultExpression(state.get(dep1).get, state.get(dep2).get))
-    c(dep1, dep2)(when).results
+    c(dep1, dep2)(when).results ^ end
   }
 }
 

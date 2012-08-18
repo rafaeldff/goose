@@ -6,8 +6,7 @@ import org.specs2.execute._
 
 
 class GooseSpec extends Specification with ResultMatchers with Goose {
-    def is = "Specifying goose itself"          ^
-             "variable assumption passing"      ^ e1 ^
+    def is = "variable assumption passing"      ^ e1 ^
              "variable assumption failing"      ^ e2 ^ 
              "stub assumption passing"          ^ e3 ^
              "stub assumption failing"          ^ e4 ^
