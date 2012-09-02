@@ -7,7 +7,7 @@ trait MiniTemplater {
    * the given separator string (by default it is a comma).
    * 
    * For instance:
-   *   expand("%i bottles of beer", 3) 
+   *   expand("%#i bottles of beer", 3) 
    * will expand to
    *   "1 bottles of beer, 2 bottles of beer, 3 bottles of beer"
    *   
@@ -22,6 +22,13 @@ trait MiniTemplater {
 }
 
 object GenerateArities extends App with MiniTemplater {
+  import scalax.io._
+  import scalax.file.Path
+  
+  val numberOfMethods = 22
+  
+  val destinationFile = Path("src", "main", "scala", "net", "rafaelferreira", "goose", "CheckingForVariousArities.scala").createFile(failIfExists=false)
+  
   val checkMethod = 
     """|  def check[%T#i: ClassManifest%, R](resultExpression: (%T#i%) => R)(testDefinition: (%Dependency[T#i]%) => When[R] => When[R]): Fragments = {
        |    val (%dep#i%) = (%dep[T#i]%)
@@ -35,9 +42,8 @@ object GenerateArities extends App with MiniTemplater {
        |  }
        |""".stripMargin
        
-  val numberOfMethods = 3
   
-  val generatedCode = {
+  def generatedCode = {
     val methods = (1 to numberOfMethods).map(expand(checkMethod, _))
     val body = methods.mkString("\n")
     
@@ -53,5 +59,5 @@ object GenerateArities extends App with MiniTemplater {
        |""".stripMargin.format(body) 
   }
   
-  println(generatedCode)
+  destinationFile.write(generatedCode)
 }
