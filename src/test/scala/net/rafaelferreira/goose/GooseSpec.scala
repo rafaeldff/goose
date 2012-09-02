@@ -19,7 +19,8 @@ class GooseSpec extends Specification with ResultMatchers with Goose {
              "arity 1 passing"  ^ e11 ^
              "arity 1 failing"  ^ e12 ^
              "arity 3 passing"  ^ e13 ^
-             "arity 3 failing"  ^ e14 ^ 
+             "arity 3 failing"  ^ e14 ^
+             "fails when variable is left undefined" ^ e15 ^
              end
   
   def e1 = 
@@ -168,5 +169,11 @@ class GooseSpec extends Specification with ResultMatchers with Goose {
    fragments.examples.head.execute must beFailing
  }
  
+ def e15 = {
+   val fragments = check(identity[String] _) {x =>
+     _.then(_ must_== "10")
+   }
+   fragments.examples.head.execute must beFailing
+ }
 
 }

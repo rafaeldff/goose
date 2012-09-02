@@ -9,6 +9,7 @@ import org.specs2.execute.DecoratedResult
 import org.specs2.Specification
 import org.specs2.matcher.MatchResult
 import org.specs2.specification.Fragment
+import org.specs2.execute.Failure
 
 trait GooseStructure {this: Specification =>
   import scala.collection.immutable.Map
@@ -72,10 +73,9 @@ trait GooseStructure {this: Specification =>
       getDepGen(dep)(None)
   }
   
-  type ResultThunk[R]  = () => R
-  type Then[R] = ResultThunk[R] => Fragment 
+  type ResultExpression[R] = Either[String,R]
   
-  class When[R](state: State = new State(), val fragments:Fragments = Fragments())(resultExpression: State => R) {
+  class When[R](state: State = new State(), val fragments:Fragments = Fragments())(resultExpression: State => ResultExpression[R]) {
     
     def when[T](assumption: Assumption[T]): When[R] = copy(newState = state.assuming(assumption)) 
     def and[T](assumption: Assumption[T]): When[R] = when(assumption)
@@ -86,14 +86,18 @@ trait GooseStructure {this: Specification =>
     }
     
     def then(expectedExpression: R => MatchResult[Any]): When[R] = {
-      val thisExample = eg { expectedExpression(resultExpression(state)) }
+      val result = resultExpression(state)
+      val thisExample = result match {
+        case Left(failureMessafe) => eg { Failure(failureMessafe) }
+        case Right(resultValue) => eg { (expectedExpression(resultValue)) }
+      }
       
       this.copy(newFragments = fragments add thisExample)
     }
     
     def results: Fragments = fragments
     
-    def copy(newResultExpression: (State => R) = resultExpression, newState: State = state, newFragments:Fragments = fragments) =
+    def copy(newResultExpression: (State => ResultExpression[R]) = resultExpression, newState: State = state, newFragments:Fragments = fragments) =
       new When(newState, newFragments)(newResultExpression)
     
   }
