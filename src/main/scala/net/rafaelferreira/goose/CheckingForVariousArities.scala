@@ -37,4 +37,6 @@ trait CheckingForVariousArities extends CheckHelpers {self: GooseStructure with 
     val when = new When[R](calcResult)
     testDefinition(dep1, dep2, dep3)(when).results
   }
+
 }
+
