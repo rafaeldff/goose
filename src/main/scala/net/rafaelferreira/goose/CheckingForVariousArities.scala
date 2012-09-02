@@ -4,18 +4,13 @@ import org.specs2.specification.Fragments
 import org.specs2.Specification
 
 
-trait CheckingForVariousArities {self: GooseStructure with Specification =>
-  private def missingValues(vs: Seq[Option[Any]]) = vs.zipWithIndex.collect {case (None, i) => i} 
-  
+trait CheckingForVariousArities extends CheckHelpers {self: GooseStructure with Specification =>
   def check[T1: ClassManifest, R](resultExpression: (T1) => R)(testDefinition: (Dependency[T1]) => When[R] => When[R]): Fragments = {
     val (dep1) = (dep[T1])
     val calcResult = {state:State =>
       val (value1) = (state.get(dep1))
       
-      missingValues(Seq(value1)) match {
-        case Nil => Right(resultExpression(value1.get))
-        case _ => Left("No value was supplied for dependencies %s. Did you forget 'when' or 'and' clauses?" format (missingValues(Seq(value1))).mkString("[", ",", "]"))  
-      }
+      whenAllPresent(Seq(value1)) { resultExpression(value1.get) }
     }
     
     val when = new When[R](calcResult)
@@ -27,10 +22,7 @@ trait CheckingForVariousArities {self: GooseStructure with Specification =>
     val calcResult = {state:State =>
       val (value1, value2) = (state.get(dep1), state.get(dep2))
       
-      missingValues(Seq(value1, value2)) match {
-        case Nil => Right(resultExpression(value1.get, value2.get))
-        case _ => Left("No value was supplied for dependencies %s. Did you forget 'when' or 'and' clauses?" format (missingValues(Seq(value1, value2))).mkString("[", ",", "]"))  
-      }
+      whenAllPresent(Seq(value1, value2)) { resultExpression(value1.get, value2.get) }
     }
     
     val when = new When[R](calcResult)
@@ -42,10 +34,7 @@ trait CheckingForVariousArities {self: GooseStructure with Specification =>
     val calcResult = {state:State =>
       val (value1, value2, value3) = (state.get(dep1), state.get(dep2), state.get(dep3))
       
-      missingValues(Seq(value1, value2, value3)) match {
-        case Nil => Right(resultExpression(value1.get, value2.get, value3.get))
-        case _ => Left("No value was supplied for dependencies %s. Did you forget 'when' or 'and' clauses?" format (missingValues(Seq(value1, value2, value3))).mkString("[", ",", "]"))  
-      }
+      whenAllPresent(Seq(value1, value2, value3)) { resultExpression(value1.get, value2.get, value3.get) }
     }
     
     val when = new When[R](calcResult)
