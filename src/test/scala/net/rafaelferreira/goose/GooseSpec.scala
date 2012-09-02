@@ -20,7 +20,7 @@ class GooseSpec extends Specification with ResultMatchers with Goose {
              "arity 1 failing"  ^ e12 ^
              "arity 3 passing"  ^ e13 ^
              "arity 3 failing"  ^ e14 ^
-             "fails when variable is left undefined" ^ e15 ^
+             "fails when variable is left undefined" ^ e15 ^ e16 ^ e17 ^
              end
   
   def e1 = 
@@ -170,10 +170,25 @@ class GooseSpec extends Specification with ResultMatchers with Goose {
  }
  
  def e15 = {
+   val fragments = check { (_:String,_:String) } {(x, y) =>
+     _.then(_ must_== ("a", "b"))
+   }
+   fragments.examples.head.execute must beFailing
+ }
+ 
+ def e16 = {
    val fragments = check(identity[String] _) {x =>
      _.then(_ must_== "10")
    }
    fragments.examples.head.execute must beFailing
  }
+ 
+ def e17 = {
+   val fragments = check { (_:String,_:String, _:String) } { (x,y,z) =>
+     _.then(_ must_== ("a", "b", "c"))
+   }
+   fragments.examples.head.execute must beFailing
+ }
+ 
 
 }
