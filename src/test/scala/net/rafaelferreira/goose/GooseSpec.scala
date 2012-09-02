@@ -185,7 +185,7 @@ class GooseSpec extends Specification with ResultMatchers with Goose {
  
  def e17 = {
    val fragments = check { (_:String,_:String, _:String) } { (x,y,z) =>
-     _.then(_ must_== ("a", "b", "c"))
+     _.when(x ==> "a").then(_ must_== ("a", "b", "c"))
    }
    fragments.examples.head.execute must beFailing
  }

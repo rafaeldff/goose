@@ -75,7 +75,7 @@ trait GooseStructure {this: Specification =>
   
   type ResultExpression[R] = Either[String,R]
   
-  class When[R](state: State = new State(), val fragments:Fragments = Fragments())(resultExpression: State => ResultExpression[R]) {
+  class When[R](resultExpression: State => ResultExpression[R], state: State = new State(), val fragments:Fragments = Fragments()) {
     
     def when[T](assumption: Assumption[T]): When[R] = copy(newState = state.assuming(assumption)) 
     def and[T](assumption: Assumption[T]): When[R] = when(assumption)
@@ -95,10 +95,10 @@ trait GooseStructure {this: Specification =>
       this.copy(newFragments = fragments add thisExample)
     }
     
-    def results: Fragments = fragments
+    def results: Fragments = fragments ^ end
     
     def copy(newResultExpression: (State => ResultExpression[R]) = resultExpression, newState: State = state, newFragments:Fragments = fragments) =
-      new When(newState, newFragments)(newResultExpression)
+      new When(newResultExpression, newState, newFragments)
     
   }
   

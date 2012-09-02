@@ -3,48 +3,52 @@ package net.rafaelferreira.goose
 import org.specs2.specification.Fragments
 import org.specs2.Specification
 
-trait CheckingForVariousArities {self: GooseStructure with Specification => 
-  def check[T1: ClassManifest, R](resultExpression: (T1) => R)(c: (Dependency[T1]) => When[R] => When[R]): Fragments = {
-    val dep1 = dep[T1]
-    val when = new When[R]()((state: State) => {
-      state.get(dep1) match {
-        case Some(value1) => Right(resultExpression(value1))
-        case None => Left("No value was supplied for the 1st dependency. Did you forget a 'when' or 'and' clause?")
-      }
-    })
-    c(dep1)(when).results ^ end
-  }
 
-  def check[T1: ClassManifest, T2: ClassManifest, R](resultExpression: (T1, T2) => R)(c: (Dependency[T1], Dependency[T2]) => When[R] => When[R]): Fragments = {
-    val (dep1, dep2) = (dep[T1], dep[T2])
-    val calcResult = (state:State) => state.get(dep1) match {
-      case None => Left("No value was supplied for the 1st dependency. Did you forget a 'when' or 'and' clause?")
-      case Some(value1) =>
-        state.get(dep2) match {
-          case None => Left("No value was supplied for the 2st dependency. Did you forget a 'when' or 'and' clause?")
-          case Some(value2) => Right(resultExpression(value1, value2))
-        }
+trait CheckingForVariousArities {self: GooseStructure with Specification =>
+  private def missingValues(vs: Seq[Option[Any]]) = vs.zipWithIndex.collect {case (None, i) => i} 
+  
+  def check[T1: ClassManifest, R](resultExpression: (T1) => R)(testDefinition: (Dependency[T1]) => When[R] => When[R]): Fragments = {
+    val (dep1) = (dep[T1])
+    val calcResult = {state:State =>
+      val (value1) = (state.get(dep1))
+      
+      missingValues(Seq(value1)) match {
+        case Nil => Right(resultExpression(value1.get))
+        case _ => Left("No value was supplied for dependencies %s. Did you forget 'when' or 'and' clauses?" format (missingValues(Seq(value1))).mkString("[", ",", "]"))  
+      }
     }
     
-    val when = new When[R]()(calcResult)
-    c(dep1, dep2)(when).results ^ end
+    val when = new When[R](calcResult)
+    testDefinition(dep1)(when).results
   }
 
-  def check[T1: ClassManifest, T2: ClassManifest, T3: ClassManifest, R](resultExpression: (T1, T2, T3) => R)(c: (Dependency[T1], Dependency[T2], Dependency[T3]) => When[R] => When[R]): Fragments = {
-    val (dep1, dep2, dep3) = (dep[T1], dep[T2], dep[T3]) 
-    val calcResult = (state:State) => state.get(dep1) match {
-      case None => Left("No value was supplied for the 1st dependency. Did you forget a 'when' or 'and' clause?")
-      case Some(value1) =>
-        state.get(dep2) match {
-          case None => Left("No value was supplied for the 2st dependency. Did you forget a 'when' or 'and' clause?")
-          case Some(value2) => state.get(dep3) match {
-            case None => Left("No value was supplied for the 3rd dependency. Did you forget a 'when' or 'and' clause?")
-            case Some(value3) => Right(resultExpression(value1, value2, value3))
-          }
-        }
-    }
+  def check[T1: ClassManifest, T2: ClassManifest, R](resultExpression: (T1, T2) => R)(testDefinition: (Dependency[T1], Dependency[T2]) => When[R] => When[R]): Fragments = {
+    val (dep1, dep2) = (dep[T1], dep[T2])
+    val calcResult = {state:State =>
+      val (value1, value2) = (state.get(dep1), state.get(dep2))
       
-    val when = new When[R]()(calcResult)
-    c(dep1, dep2, dep3)(when).results ^ end
+      missingValues(Seq(value1, value2)) match {
+        case Nil => Right(resultExpression(value1.get, value2.get))
+        case _ => Left("No value was supplied for dependencies %s. Did you forget 'when' or 'and' clauses?" format (missingValues(Seq(value1, value2))).mkString("[", ",", "]"))  
+      }
+    }
+    
+    val when = new When[R](calcResult)
+    testDefinition(dep1, dep2)(when).results
+  }
+
+  def check[T1: ClassManifest, T2: ClassManifest, T3: ClassManifest, R](resultExpression: (T1, T2, T3) => R)(testDefinition: (Dependency[T1], Dependency[T2], Dependency[T3]) => When[R] => When[R]): Fragments = {
+    val (dep1, dep2, dep3) = (dep[T1], dep[T2], dep[T3])
+    val calcResult = {state:State =>
+      val (value1, value2, value3) = (state.get(dep1), state.get(dep2), state.get(dep3))
+      
+      missingValues(Seq(value1, value2, value3)) match {
+        case Nil => Right(resultExpression(value1.get, value2.get, value3.get))
+        case _ => Left("No value was supplied for dependencies %s. Did you forget 'when' or 'and' clauses?" format (missingValues(Seq(value1, value2, value3))).mkString("[", ",", "]"))  
+      }
+    }
+    
+    val when = new When[R](calcResult)
+    testDefinition(dep1, dep2, dep3)(when).results
   }
 }
