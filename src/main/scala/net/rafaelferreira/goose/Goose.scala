@@ -11,7 +11,7 @@ import org.specs2.matcher.MatchResult
 import org.specs2.specification.Fragment
 import org.specs2.execute.Failure
 
-trait GooseStructure extends Stubs {this: Specification =>
+trait GooseStructure {this: Specification =>
   import scala.collection.immutable.Map
   
   val mocker = new org.specs2.mock.MockitoMocker {}
@@ -56,11 +56,6 @@ trait GooseStructure extends Stubs {this: Specification =>
     def stub[R](call: T => R) = new Stubbing[R](call)
   }
   
-  class Dependency[T: ClassManifest] extends GeneralDependency[T] with DirectDependency[T] with StubDependency[T] {self =>
-    val manifest = implicitly[ClassManifest[T]]
-    override def toString = "DEP[%s]" format result
-  }
-  
   type DepGen[T] = Option[T] => Option[T]
   
   class State(assumptions: Map[GeneralDependency[_], Any] = Map().withDefaultValue((_:Any) => None)) {
@@ -77,7 +72,7 @@ trait GooseStructure extends Stubs {this: Specification =>
       assumptions(dep).asInstanceOf[DepGen[T]]
     }
     
-    def get[T](dep:Dependency[T]): Option[T] = 
+    def get[T](dep: GeneralDependency[T]): Option[T] = 
       getDepGen(dep)(None)
   }
   
@@ -110,9 +105,20 @@ trait GooseStructure extends Stubs {this: Specification =>
     
   }
   
-  def dep[T: ClassManifest]: Dependency[T] = new Dependency[T]
+  
+  type Dependency[T] <: GeneralDependency[T]
+  def dep[T: ClassManifest]: Dependency[T]
   
 }
 
 
-trait Goose extends GooseStructure with CheckingForVariousArities {self: Specification =>  }
+trait Goose extends GooseStructure with CheckingForVariousArities {self: Specification =>
+  class ActualDependency[T: ClassManifest] extends GeneralDependency[T] with DirectDependency[T] with StubDependency[T] {self =>
+    val manifest = implicitly[ClassManifest[T]]
+    override def toString = "DEP[%s]" format result
+  }
+  
+  type Dependency[T] = ActualDependency[T]
+  
+  def dep[T: ClassManifest]: ActualDependency[T] = new ActualDependency[T]
+}
