@@ -11,35 +11,40 @@ import org.specs2.matcher.MatchResult
 import org.specs2.specification.Fragment
 import org.specs2.execute.Failure
 
-trait GooseStructure {this: Specification =>
+trait GooseStructure extends Stubs {this: Specification =>
   import scala.collection.immutable.Map
   
   val mocker = new org.specs2.mock.MockitoMocker {}
   
-  trait Assumption[T] {
-    def relatedTo: Dependency[T]
-    def apply(previous:Option[T]):Option[T]
+  trait Assumption[D] {
+    def relatedTo: GeneralDependency[D]
+    def apply(previous:Option[D]):Option[D]
   }
   
-  class Dependency[T: ClassManifest] {self =>
+  trait GeneralDependency[T] {
     var result: Option[T] = None
     
     def apply():T = result match {
       case Some(result) => result
       case None => throw new RuntimeException("Dependency wasn't setup properly")
     } 
-    
+  }
+  
+  trait DirectDependency[T] {self: GeneralDependency[T] =>
     def ==>(value: T): Assumption[T] = new Assumption[T] {
       def relatedTo = self
       def apply(previous:Option[T]) = Some(value)
     }
-    
+  }
+  
+  trait StubDependency[T] {self: GeneralDependency[T] =>
+    val manifest: ClassManifest[T]
     class Stubbing[R](call: T => R) {
       def ==>(r:R) = new Assumption[T] {
-        def relatedTo = self
+        def relatedTo = StubDependency.this
         def apply(previous:Option[T]) = {
           val mock = previous match {
-            case None => mocker.mock(implicitly[ClassManifest[T]])
+            case None => mocker.mock(manifest)
             case Some(mock) => mock
           }
           mocker.when(call(mock)).thenReturn(r)
@@ -49,15 +54,18 @@ trait GooseStructure {this: Specification =>
     }
     
     def stub[R](call: T => R) = new Stubbing[R](call)
-
+  }
+  
+  class Dependency[T: ClassManifest] extends GeneralDependency[T] with DirectDependency[T] with StubDependency[T] {self =>
+    val manifest = implicitly[ClassManifest[T]]
     override def toString = "DEP[%s]" format result
   }
   
   type DepGen[T] = Option[T] => Option[T]
   
-  class State(assumptions: Map[Dependency[_], Any] = Map().withDefaultValue((_:Any) => None)) {
+  class State(assumptions: Map[GeneralDependency[_], Any] = Map().withDefaultValue((_:Any) => None)) {
     def assuming[T](assumption:Assumption[T]) = { 
-      val newDep: Dependency[T] = assumption.relatedTo
+      val newDep: GeneralDependency[T] = assumption.relatedTo
       val newGen: DepGen[T] = assumption.apply _
       
       val oldGen = getDepGen(newDep)
@@ -65,7 +73,7 @@ trait GooseStructure {this: Specification =>
       new State(assumptions + (newDep -> (oldGen andThen newGen)))
     }
     
-    private def getDepGen[T](dep: Dependency[T]): DepGen[T] = {
+    private def getDepGen[T](dep: GeneralDependency[T]): DepGen[T] = {
       assumptions(dep).asInstanceOf[DepGen[T]]
     }
     
