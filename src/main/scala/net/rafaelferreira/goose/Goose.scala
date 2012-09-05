@@ -14,8 +14,6 @@ import org.specs2.execute.Failure
 trait GooseStructure {this: Specification =>
   import scala.collection.immutable.Map
   
-  val mocker = new org.specs2.mock.MockitoMocker {}
-  
   trait Assumption[D] {
     def relatedTo: GeneralDependency[D]
     def apply(previous:Option[D]):Option[D]
@@ -35,25 +33,6 @@ trait GooseStructure {this: Specification =>
       def relatedTo = self
       def apply(previous:Option[T]) = Some(value)
     }
-  }
-  
-  trait StubDependency[T] {self: GeneralDependency[T] =>
-    val manifest: ClassManifest[T]
-    class Stubbing[R](call: T => R) {
-      def ==>(r:R) = new Assumption[T] {
-        def relatedTo = StubDependency.this
-        def apply(previous:Option[T]) = {
-          val mock = previous match {
-            case None => mocker.mock(manifest)
-            case Some(mock) => mock
-          }
-          mocker.when(call(mock)).thenReturn(r)
-          Some(mock)
-        }
-      }
-    }
-    
-    def stub[R](call: T => R) = new Stubbing[R](call)
   }
   
   type DepGen[T] = Option[T] => Option[T]
@@ -105,14 +84,13 @@ trait GooseStructure {this: Specification =>
     
   }
   
-  
   type Dependency[T] <: GeneralDependency[T]
-  def dep[T: ClassManifest]: Dependency[T]
   
+  def dep[T: ClassManifest]: Dependency[T]
 }
 
 
-trait Goose extends GooseStructure with CheckingForVariousArities {self: Specification =>
+trait Goose extends GooseStructure with CheckingForVariousArities with Stubs {self: Specification =>
   class ActualDependency[T: ClassManifest] extends GeneralDependency[T] with DirectDependency[T] with StubDependency[T] {self =>
     val manifest = implicitly[ClassManifest[T]]
     override def toString = "DEP[%s]" format result
