@@ -3,7 +3,6 @@ package stubs
 
 import java.lang.reflect.{Method, InvocationHandler}
 
-
 case class Stub[T: ClassManifest](expectations: Seq[Expectation[T]] = Vector()) {
   lazy val results = 
     expectations.foldLeft(Map[String,AnyRef]()) {(map, expectation) =>
@@ -11,11 +10,10 @@ case class Stub[T: ClassManifest](expectations: Seq[Expectation[T]] = Vector()) 
     }
   
   def expecting[R](expectation:Expectation[T]):Stub[T] = copy(expectations = expectations :+ expectation) 
-  def stubObject: T = ProxyFactory(new InvocationHandler {
-    def invoke(obj:Object, method:Method, args:Array[Object]) = {
-      results(method.getName)
-    }
-  }) 
+  
+  def stubObject: T = ProxyFactory { (obj:Object, method:Method, args:Array[Object]) =>
+    results(method.getName)
+  }
 }
 
 case class Expectation[T:ClassManifest](call: T => Any, result: AnyRef) {
@@ -36,12 +34,10 @@ class Recorder[T:ClassManifest] {
   
   var call: Option[String] = None
   
-  private val dummy = ProxyFactory(new InvocationHandler {
-    def invoke(obj:Object, method:Method, args:Array[Object]) = {
-      call = Some(method.getName);
-      null
-    }
-  })
+  private val dummy = ProxyFactory { (obj:Object, method:Method, args:Array[Object]) =>
+    call = Some(method.getName);
+    null
+  }
   
   def apply(): T = dummy
   def methodCalled:String = call.getOrElse { 
@@ -54,10 +50,15 @@ class Recorder[T:ClassManifest] {
 object ProxyFactory {
   import java.lang.reflect.{Array=>_, _}
   
-  def apply[T:ClassManifest](handler:InvocationHandler) = { 
+  type ProxyReaction = (Object, Method, Array[Object]) => AnyRef
+  
+  def apply[T:ClassManifest](reaction: ProxyReaction) = { 
+    val handler = new InvocationHandler {
+      def invoke(obj:Object, method:Method, args:Array[Object]) = 
+        reaction(obj, method, args)
+    }
+    
     val javaClass = implicitly[ClassManifest[T]].erasure
-    Proxy.
-      newProxyInstance(Thread.currentThread.getContextClassLoader, Array(javaClass), handler).
-      asInstanceOf[T]
+    Proxy.newProxyInstance(Thread.currentThread.getContextClassLoader, Array(javaClass), handler).asInstanceOf[T]
   }
 }
