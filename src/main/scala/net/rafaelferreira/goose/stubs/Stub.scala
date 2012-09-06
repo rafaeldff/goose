@@ -1,19 +1,22 @@
 package net.rafaelferreira.goose
 package stubs
 
-import java.lang.reflect.{Method, InvocationHandler}
+import java.lang.reflect.Method
+import org.specs2.matcher.Matcher
+
 
 case class Stub[T: ClassManifest](expectations: Seq[Expectation[T]] = Vector()) {
   lazy val results = 
-    expectations.foldLeft(Map[String,AnyRef]()) {(map, expectation) =>
+    expectations.foldLeft(Map[Method, AnyRef]()) {(map, expectation) =>
       map + (expectation.methodCalled -> expectation.result) 
     }
   
   def expecting[R](expectation:Expectation[T]):Stub[T] = copy(expectations = expectations :+ expectation) 
   
-  def stubObject: T = ProxyFactory { (obj:Object, method:Method, args:Array[Object]) =>
-    results(method.getName)
-  }
+  def stubObject: T = 
+    ProxyFactory { (obj:Object, method:Method, args:Array[Object]) =>
+      results(method)
+    }
 }
 
 case class Expectation[T:ClassManifest](call: T => Any, result: AnyRef) {
@@ -29,18 +32,17 @@ class Recorder[T:ClassManifest] {
    * This class encapsulates the mutability inherent in working with proxies 
    */
   
-  import java.lang.reflect.{Array=>ReflArray, _}
   val javaClass = implicitly[ClassManifest[T]].erasure
   
-  var call: Option[String] = None
+  var call: Option[Method] = None
   
   private val dummy = ProxyFactory { (obj:Object, method:Method, args:Array[Object]) =>
-    call = Some(method.getName);
+    call = Some(method);
     null
   }
   
   def apply(): T = dummy
-  def methodCalled:String = call.getOrElse { 
+  def methodCalled:Method = call.getOrElse { 
     throw new IllegalStateException(
       "Expecting a call on proxy object of class '%s' but none was made." format javaClass.getName
     ) 
@@ -50,15 +52,39 @@ class Recorder[T:ClassManifest] {
 object ProxyFactory {
   import java.lang.reflect.{Array=>_, _}
   
-  type ProxyReaction = (Object, Method, Array[Object]) => AnyRef
+  type ProxyReaction = (AnyRef, Method, Array[AnyRef]) => AnyRef
   
-  def apply[T:ClassManifest](reaction: ProxyReaction) = { 
+  def apply[T:ClassManifest](reaction: ProxyReaction):T = { 
+      val javaClass = implicitly[ClassManifest[T]].erasure
+      ProxyFactory.make[T](javaClass)(reaction)
+  }
+  
+  def make[Result](cls:Class[_]*)(reaction:ProxyReaction):Result = {
     val handler = new InvocationHandler {
-      def invoke(obj:Object, method:Method, args:Array[Object]) = 
+    def invoke(obj:Object, method:Method, args:Array[Object]) = 
         reaction(obj, method, args)
     }
-    
-    val javaClass = implicitly[ClassManifest[T]].erasure
-    Proxy.newProxyInstance(Thread.currentThread.getContextClassLoader, Array(javaClass), handler).asInstanceOf[T]
+        
+    Proxy.newProxyInstance(Thread.currentThread.getContextClassLoader, Array(cls:_*), handler).asInstanceOf[Result]
+  } 
+}
+
+trait FakeArgument {
+  def $gooseMatcherMethod: Matcher[_]
+}
+  
+  
+  
+trait StubsStructure {
+  
+  implicit def argThat[T: ClassManifest, U <: T](m: Matcher[U]): T = {
+    val parameterClass = implicitly[ClassManifest[T]].erasure
+    ProxyFactory.make(parameterClass, classOf[FakeArgument]) {(obj:AnyRef, method:Method, args:Array[AnyRef]) =>
+      method.getName match {
+        case "$gooseMatcherMethod" => m
+        case _ => null
+      }
+    }
   }
+    
 }

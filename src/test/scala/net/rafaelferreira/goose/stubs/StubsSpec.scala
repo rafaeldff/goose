@@ -3,13 +3,16 @@ package stubs
 
 import org.specs2.Specification
 
-class StubsSpec extends Specification {
+class StubsSpec extends Specification with StubsStructure {
+  trait Bar {}
   trait Foo {
-    def foo:String  
+    def foo:String
+    def takesBar(bar:Bar):String
   }
   
   def is =  "Stub" ^ p ^
-              "stub no-args method" ! stubNoArgs ^
+              "stub a no-args method" ! stubNoArgs ^
+              "stub a method that takes an argument typed to a trait" ! stubWithArgs ^
             "Recorder" ^ p ^
               "call recorder records last call" ! recorderOk ^
               "call recorder raises exception if we try to fetch a call when none was made" ! recorderFailure
@@ -20,10 +23,17 @@ class StubsSpec extends Specification {
     expecting.stubObject.foo must_== "result"
   }
   
+  def stubWithArgs = {
+    val stub = new Stub[Foo]
+    val barParameter = new Bar {}
+    val expecting = stub.expecting(Expectation({_.takesBar(===(barParameter))}, "result"))
+    expecting.stubObject.takesBar(barParameter) must_== "result"
+  }
+  
   def recorderOk = {
     val recorder = new Recorder[Foo]
     recorder().foo
-    recorder.methodCalled should_== "foo"
+    recorder.methodCalled.getName should_== "foo"
   }
   
   def recorderFailure = {
