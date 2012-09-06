@@ -1,4 +1,5 @@
-package net.rafaelferreira.goose.stubs
+package net.rafaelferreira.goose
+package stubs
 
 class Stub[T: ClassManifest] {
     def expecting[R](call: T => R, result: R):Stub[T] = this

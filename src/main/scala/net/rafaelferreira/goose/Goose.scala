@@ -90,7 +90,7 @@ trait GooseStructure {this: Specification =>
 }
 
 
-trait Goose extends GooseStructure with CheckingForVariousArities with Stubs {self: Specification =>
+trait Goose extends GooseStructure with CheckingForVariousArities with stubs.Stubs {self: Specification =>
   class ActualDependency[T: ClassManifest] extends GeneralDependency[T] with DirectDependency[T] with StubDependency[T] {self =>
     val manifest = implicitly[ClassManifest[T]]
     override def toString = "DEP[%s]" format result

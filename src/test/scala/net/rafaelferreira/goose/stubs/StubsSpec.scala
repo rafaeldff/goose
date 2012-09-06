@@ -1,4 +1,5 @@
 package net.rafaelferreira.goose
+package stubs
 
 import org.specs2.Specification
 

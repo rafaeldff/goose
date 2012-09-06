@@ -1,7 +1,7 @@
 package net.rafaelferreira.goose
+package stubs
 
 import org.specs2.Specification
-import net.rafaelferreira.goose.stubs.Stub
 
 trait Stubs { this: GooseStructure =>
   private[Stubs] val mocker = new org.specs2.mock.MockitoMocker {}
