@@ -4,7 +4,6 @@ package stubs
 import java.lang.reflect.Method
 import org.specs2.matcher.Matcher
 
-
 case class Stub[T: ClassManifest](expectations: Seq[Expectation[T]] = Vector()) {
   lazy val results = 
     expectations.foldLeft(Map[Method, AnyRef]()) {(map, expectation) =>
@@ -25,7 +24,10 @@ case class Expectation[T:ClassManifest](call: T => Any, result: AnyRef) {
     call(recorder())
     recorder.methodCalled
   }
+  
 }
+
+case class Call(method:Method, args:Array[AnyRef])
 
 class Recorder[T:ClassManifest] {
   /*
@@ -72,8 +74,6 @@ object ProxyFactory {
 trait FakeArgument {
   def $gooseMatcherMethod: Matcher[_]
 }
-  
-  
   
 trait StubsStructure {
   

@@ -13,6 +13,7 @@ class StubsSpec extends Specification with StubsStructure {
   def is =  "Stub" ^ p ^
               "stub a no-args method" ! stubNoArgs ^
               "stub a method that takes an argument typed to a trait" ! stubWithArgs ^
+              "stub a method that may take different arguments" ! stubWithDifferentArgs ^
             "Recorder" ^ p ^
               "call recorder records last call" ! recorderOk ^
               "call recorder raises exception if we try to fetch a call when none was made" ! recorderFailure
@@ -28,6 +29,13 @@ class StubsSpec extends Specification with StubsStructure {
     val barParameter = new Bar {}
     val expecting = stub.expecting(Expectation({_.takesBar(===(barParameter))}, "result"))
     expecting.stubObject.takesBar(barParameter) must_== "result"
+  }
+  
+  def stubWithDifferentArgs = {
+    val stub = new Stub[Foo]
+    val barParameter = new Bar {}
+    val expectingFirst = stub.expecting(Expectation({_.takesBar(===(barParameter))}, "result"))
+    expectingFirst.stubObject.takesBar(barParameter) must_== "result"
   }
   
   def recorderOk = {
