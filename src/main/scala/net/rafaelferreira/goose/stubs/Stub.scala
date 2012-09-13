@@ -4,6 +4,8 @@ package stubs
 import java.lang.reflect.Method
 import org.specs2.matcher.Matcher
 
+import scala.language.experimental.macros
+
 case class Stub[T: ClassManifest](expectations: Seq[Expectation[T]] = Vector()) {
   lazy val results = 
     expectations.foldLeft(Map[Method, AnyRef]()) {(map, expectation) =>
@@ -27,7 +29,11 @@ case class Expectation[T:ClassManifest](call: T => Any, result: AnyRef) {
   
 }
 
-case class Call(method:Method, args:Array[AnyRef])
+case class Call(method:String, args:Seq[Any])
+
+object Call {
+  def capture[T,R](methodCall: T => R): Call = macro CallMacro.capture_impl[T,R]
+}
 
 class Recorder[T:ClassManifest] {
   /*
