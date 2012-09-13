@@ -6,6 +6,8 @@ organization := "net.rafaelferreira"
 
 scalaVersion := "2.10.0-M7"
 
+libraryDependencies +=  "org.scala-lang" % "scala-reflect" % "2.10.0-M7"
+
 libraryDependencies += "com.jsuereth" %% "scala-arm" % "1.2" intransitive()
 
 libraryDependencies += "org.specs2" % "specs2_2.10.0-M7" % "1.12.1.1"
