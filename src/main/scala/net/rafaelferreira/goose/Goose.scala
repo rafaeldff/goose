@@ -10,6 +10,7 @@ import org.specs2.Specification
 import org.specs2.matcher.MatchResult
 import org.specs2.specification.Fragment
 import org.specs2.execute.Failure
+import scala.reflect.ClassTag
 
 trait GooseStructure {this: Specification =>
   import scala.collection.immutable.Map
@@ -86,17 +87,17 @@ trait GooseStructure {this: Specification =>
   
   type Dependency[T] <: GeneralDependency[T]
   
-  def dep[T: ClassManifest]: Dependency[T]
+  def dep[T: ClassTag]: Dependency[T]
 }
 
 
 trait Goose extends GooseStructure with CheckingForVariousArities with stubs.Stubs {self: Specification =>
-  class ActualDependency[T: ClassManifest] extends GeneralDependency[T] with DirectDependency[T] with StubDependency[T] {self =>
-    val manifest = implicitly[ClassManifest[T]]
+  class ActualDependency[T: ClassTag] extends GeneralDependency[T] with DirectDependency[T] with StubDependency[T] {self =>
+    val manifest = implicitly[ClassTag[T]]
     override def toString = "DEP[%s]" format result
   }
   
   type Dependency[T] = ActualDependency[T]
   
-  def dep[T: ClassManifest]: ActualDependency[T] = new ActualDependency[T]
+  def dep[T: ClassTag]: ActualDependency[T] = new ActualDependency[T]
 }

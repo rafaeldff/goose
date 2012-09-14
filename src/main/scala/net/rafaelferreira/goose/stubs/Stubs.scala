@@ -2,6 +2,7 @@ package net.rafaelferreira.goose
 package stubs
 
 import org.specs2.Specification
+import scala.reflect.ClassTag
 
 trait Stubs { this: GooseStructure =>
   private[Stubs] val mocker = new org.specs2.mock.MockitoMocker {}
@@ -21,7 +22,7 @@ trait Stubs { this: GooseStructure =>
     }
 
   trait StubDependency[T] { self: GeneralDependency[T] =>
-    val manifest: ClassManifest[T]
+    val manifest: ClassTag[T]
 
     def stub[R](call: T => R) = new Stubbing[T,R](this)(call)
   }

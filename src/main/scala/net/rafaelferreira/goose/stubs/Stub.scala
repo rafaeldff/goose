@@ -3,10 +3,10 @@ package stubs
 
 import java.lang.reflect.Method
 import org.specs2.matcher.Matcher
-
 import scala.language.experimental.macros
+import scala.reflect.ClassTag
 
-case class Stub[T: ClassManifest](expectations: Seq[Expectation[T]] = Vector()) {
+case class Stub[T: ClassTag](expectations: Seq[Expectation[T]] = Vector()) {
   lazy val results = 
     expectations.foldLeft(Map[Method, AnyRef]()) {(map, expectation) =>
       map + (expectation.methodCalled -> expectation.result) 
@@ -20,7 +20,7 @@ case class Stub[T: ClassManifest](expectations: Seq[Expectation[T]] = Vector()) 
     }
 }
 
-case class Expectation[T:ClassManifest](call: T => Any, result: AnyRef) {
+case class Expectation[T:ClassTag](call: T => Any, result: AnyRef) {
   val methodCalled = {
     val recorder = new Recorder[T]
     call(recorder())
@@ -35,12 +35,12 @@ object Call {
   def capture[T,R](methodCall: T => R): Call = macro CallMacro.capture_impl[T,R]
 }
 
-class Recorder[T:ClassManifest] {
+class Recorder[T:ClassTag] {
   /*
    * This class encapsulates the mutability inherent in working with proxies 
    */
   
-  val javaClass = implicitly[ClassManifest[T]].erasure
+  val javaClass = implicitly[ClassTag[T]].runtimeClass
   
   var call: Option[Method] = None
   
@@ -62,8 +62,8 @@ object ProxyFactory {
   
   type ProxyReaction = (AnyRef, Method, Array[AnyRef]) => AnyRef
   
-  def apply[T:ClassManifest](reaction: ProxyReaction):T = { 
-      val javaClass = implicitly[ClassManifest[T]].erasure
+  def apply[T:ClassTag](reaction: ProxyReaction):T = { 
+      val javaClass = implicitly[ClassTag[T]].runtimeClass
       ProxyFactory.make[T](javaClass)(reaction)
   }
   
@@ -83,8 +83,8 @@ trait FakeArgument {
   
 trait StubsStructure {
   
-  implicit def argThat[T: ClassManifest, U <: T](m: Matcher[U]): T = {
-    val parameterClass = implicitly[ClassManifest[T]].erasure
+  implicit def argThat[T: ClassTag, U <: T](m: Matcher[U]): T = {
+    val parameterClass = implicitly[ClassTag[T]].runtimeClass
     ProxyFactory.make(parameterClass, classOf[FakeArgument]) {(obj:AnyRef, method:Method, args:Array[AnyRef]) =>
       method.getName match {
         case "$gooseMatcherMethod" => m

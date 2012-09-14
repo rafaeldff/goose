@@ -30,7 +30,7 @@ object GenerateArities extends App with MiniTemplater {
   val destinationFile = Path("src", "main", "scala", "net", "rafaelferreira", "goose", "CheckingForVariousArities.scala").createFile(failIfExists=false)
   
   val checkMethod = 
-    """|  def check[%T#i: ClassManifest%, R](resultExpression: (%T#i%) => R)(testDefinition: (%Dependency[T#i]%) => When[R] => When[R]): Fragments = {
+    """|  def check[%T#i: ClassTag%, R](resultExpression: (%T#i%) => R)(testDefinition: (%Dependency[T#i]%) => When[R] => When[R]): Fragments = {
        |    val (%dep#i%) = (%dep[T#i]%)
        |    val calcResult = {state:State =>
        |      val (%value#i%) = (%state.get(dep#i)%)
@@ -48,6 +48,7 @@ object GenerateArities extends App with MiniTemplater {
     val body = methods.mkString("\n")
     
     """|package net.rafaelferreira.goose
+       |import scala.reflect.ClassTag
        |
        |import org.specs2.specification.Fragments
        |import org.specs2.Specification
