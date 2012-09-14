@@ -29,12 +29,6 @@ case class Expectation[T:ClassTag](call: T => Any, result: AnyRef) {
   
 }
 
-case class Call(method:String, args:Seq[Any])
-
-object Call {
-  def capture[T,R](methodCall: T => R): Call = macro CallMacro.capture_impl[T,R]
-}
-
 class Recorder[T:ClassTag] {
   /*
    * This class encapsulates the mutability inherent in working with proxies 
