@@ -20,21 +20,21 @@ class StubsSpec extends Specification with StubsStructure {
   
   def stubNoArgs = {
     val stub = new Stub[Foo]
-    val expecting = stub.expecting(Expectation({_.foo}, "result"))
+    val expecting = stub.expecting(Expectation(Call("foo", Nil), "result"))
     expecting.stubObject.foo must_== "result"
   }
   
   def stubWithArgs = {
     val stub = new Stub[Foo]
     val barParameter = new Bar {}
-    val expecting = stub.expecting(Expectation({_.takesBar(===(barParameter))}, "result"))
+    val expecting = stub.expecting(Expectation(Call("takesBar", Seq(===(barParameter))), "result"))
     expecting.stubObject.takesBar(barParameter) must_== "result"
   }
   
   def stubWithDifferentArgs = {
     val stub = new Stub[Foo]
     val barParameter = new Bar {}
-    val expectingFirst = stub.expecting(Expectation({_.takesBar(===(barParameter))}, "result"))
+    val expectingFirst = stub.expecting(Expectation(Call("takesBar", Seq(===(barParameter))), "result"))
     expectingFirst.stubObject.takesBar(barParameter) must_== "result"
   }
   

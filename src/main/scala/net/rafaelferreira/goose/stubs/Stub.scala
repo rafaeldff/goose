@@ -8,24 +8,21 @@ import scala.reflect.ClassTag
 
 case class Stub[T: ClassTag](expectations: Seq[Expectation[T]] = Vector()) {
   lazy val results = 
-    expectations.foldLeft(Map[Method, AnyRef]()) {(map, expectation) =>
+    expectations.foldLeft(Map[String, AnyRef]()) {(map, expectation) =>
       map + (expectation.methodCalled -> expectation.result) 
     }
   
-  def expecting[R](expectation:Expectation[T]):Stub[T] = copy(expectations = expectations :+ expectation) 
+  def expecting[R](expectation:Expectation[T]):Stub[T] = 
+    copy(expectations = expectations :+ expectation) 
   
   def stubObject: T = 
     ProxyFactory { (obj:Object, method:Method, args:Array[Object]) =>
-      results(method)
+      results(method.getName)
     }
 }
 
-case class Expectation[T:ClassTag](call: T => Any, result: AnyRef) {
-  val methodCalled = {
-    val recorder = new Recorder[T]
-    call(recorder())
-    recorder.methodCalled
-  }
+case class Expectation[T:ClassTag](call: Call, result: AnyRef) {
+  val methodCalled = call.method
   
 }
 
