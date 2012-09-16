@@ -26,28 +26,6 @@ case class Expectation[T:ClassTag](call: Call, result: AnyRef) {
   
 }
 
-class Recorder[T:ClassTag] {
-  /*
-   * This class encapsulates the mutability inherent in working with proxies 
-   */
-  
-  val javaClass = implicitly[ClassTag[T]].runtimeClass
-  
-  var call: Option[Method] = None
-  
-  private val dummy = ProxyFactory { (obj:Object, method:Method, args:Array[Object]) =>
-    call = Some(method);
-    null
-  }
-  
-  def apply(): T = dummy
-  def methodCalled:Method = call.getOrElse { 
-    throw new IllegalStateException(
-      "Expecting a call on proxy object of class '%s' but none was made." format javaClass.getName
-    ) 
-  } 
-}
-
 object ProxyFactory {
   import java.lang.reflect.{Array=>_, _}
   
