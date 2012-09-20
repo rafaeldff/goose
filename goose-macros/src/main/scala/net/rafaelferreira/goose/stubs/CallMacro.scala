@@ -6,7 +6,7 @@ import scala.reflect.macros._
 import scala.language.experimental.macros
 
 object CallMacro {
-  def capture_impl[T: c.AbsTypeTag](c: Context)(methodCall: c.Expr[T => Any]): c.Expr[Call] = {
+  def capture_impl[T: c.AbsTypeTag](c: Context)(methodCall: c.Expr[T => Any]): c.Expr[Call[T]] = {
     import c.universe._
     val (methodTermName, valuesTrees) = methodCall.tree match {
       case Function(_, Select(_, methodTermName)) => (methodTermName, Nil)  
@@ -14,10 +14,10 @@ object CallMacro {
       case _ => c.abort(c.enclosingPosition, "Expression %s is not a simple method call" format methodCall)
     }
     
-    generateCallObject(c)(methodTermName, valuesTrees)
+    generateCallObject[T](c)(methodTermName, valuesTrees)
   } 
   
-  def generateCallObject(c:Context)(methodTermName: c.Name, valuesTrees: List[c.Tree]) = {
+  def generateCallObject[T: c.AbsTypeTag](c:Context)(methodTermName: c.Name, valuesTrees: List[c.Tree]) = {
     import c.universe._
     
     val selfTree = This(newTypeName(""))
@@ -34,6 +34,6 @@ object CallMacro {
         valuesTrees)
     val valueListExpression = c.Expr[List[Any]](valueListTree)
     
-    reify(new Call(this, methodNameExpression.splice, valueListExpression.splice))
+    reify(new Call[T](this, methodNameExpression.splice, valueListExpression.splice))
   }
 }

@@ -21,7 +21,7 @@ case class Stub[T: ClassTag](expectations: Seq[Expectation[T]] = Vector()) {
     }
 }
 
-case class Expectation[T:ClassTag](call: Call, result: AnyRef) {
+case class Expectation[T:ClassTag](call: Call[T], result: AnyRef) {
   val methodCalled = call.method
   
 }

@@ -23,15 +23,15 @@ trait Stubs { this: GooseStructure =>
       }
     }
 
-  case class ReturnAssumptionFactory(call:Call) {
-    def ==>(result:Any) = ???
+  case class ReturnAssumptionFactory[T](call:Call[T]) {
+    def ==>(result:Any):Assumption[T] = ???
   }
   
-  implicit def call2returnAssumptionFactory(c:Call) = new ReturnAssumptionFactory(c)
+  implicit def call2returnAssumptionFactory[T](c:Call[T]) = new ReturnAssumptionFactory[T](c)
 
   trait StubDependency[T] { self: GeneralDependency[T] =>
     val manifest: ClassTag[T]
 
-    def stub(methodCall: T => Any): Call = macro CallMacro.capture_impl[T]
+    def stub(methodCall: T => Any): Call[T] = macro CallMacro.capture_impl[T]
   }
 }
