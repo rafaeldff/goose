@@ -20,6 +20,9 @@ object CallMacro {
   def generateCallObject(c:Context)(methodTermName: c.Name, valuesTrees: List[c.Tree]) = {
     import c.universe._
     
+    val selfTree = This(newTypeName(""))
+    val selfExpression = c.Expr[AnyRef](selfTree)
+    
     val methodNameTree  = Literal(Constant(methodTermName.toString))
     val methodNameExpression = c.Expr[String](methodNameTree)
     
@@ -31,6 +34,6 @@ object CallMacro {
         valuesTrees)
     val valueListExpression = c.Expr[List[Any]](valueListTree)
     
-    reify(new Call(methodNameExpression.splice, valueListExpression.splice))
+    reify(new Call(this, methodNameExpression.splice, valueListExpression.splice))
   }
 }
