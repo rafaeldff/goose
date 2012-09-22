@@ -34,6 +34,6 @@ object CallMacro {
         valuesTrees)
     val valueListExpression = c.Expr[List[Any]](valueListTree)
     
-    reify(new Call[T](this, methodNameExpression.splice, valueListExpression.splice))
+    reify(new Call[T](selfExpression.splice, methodNameExpression.splice, valueListExpression.splice))
   }
 }
