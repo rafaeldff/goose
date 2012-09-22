@@ -17,11 +17,8 @@ object CallMacro {
     generateCallObject[T](c)(methodTermName, valuesTrees)
   } 
   
-  def generateCallObject[T: c.AbsTypeTag](c:Context)(methodTermName: c.Name, valuesTrees: List[c.Tree]) = {
+  def generateCallObject[T: c.WeakTypeTag](c:Context)(methodTermName: c.Name, valuesTrees: List[c.Tree]) = {
     import c.universe._
-    
-    val selfTree = This(newTypeName(""))
-    val selfExpression = c.Expr[AnyRef](selfTree)
     
     val methodNameTree  = Literal(Constant(methodTermName.toString))
     val methodNameExpression = c.Expr[String](methodNameTree)
@@ -34,6 +31,6 @@ object CallMacro {
         valuesTrees)
     val valueListExpression = c.Expr[List[Any]](valueListTree)
     
-    reify(new Call[T](selfExpression.splice, methodNameExpression.splice, valueListExpression.splice))
+    reify(new Call[T](c.prefix.splice, methodNameExpression.splice, valueListExpression.splice))
   }
 }
