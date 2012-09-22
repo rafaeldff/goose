@@ -4,11 +4,13 @@ version := "0.1-SNAPSHOT"
 
 organization := "net.rafaelferreira"
 
-scalaVersion := "2.10.0-M7"
+resolvers += "sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
-libraryDependencies +=  "org.scala-lang" % "scala-reflect" % "2.10.0-M7"
+scalaVersion := "2.10.0-SNAPSHOT"
 
-libraryDependencies += "com.jsuereth" %% "scala-arm" % "1.2" intransitive()
+libraryDependencies +=  "org.scala-lang" % "scala-reflect" % "2.10.0-SNAPSHOT"
+
+libraryDependencies += "com.jsuereth" % "scala-arm_2.10.0-M7" % "1.2" intransitive()
 
 libraryDependencies += "org.specs2" % "specs2_2.10.0-M7" % "1.12.1.1"
 

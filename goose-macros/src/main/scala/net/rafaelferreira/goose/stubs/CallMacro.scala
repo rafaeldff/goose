@@ -6,7 +6,7 @@ import scala.reflect.macros._
 import scala.language.experimental.macros
 
 object CallMacro {
-  def capture_impl[T: c.AbsTypeTag](c: Context)(methodCall: c.Expr[T => Any]): c.Expr[Call[T]] = {
+  def capture_impl[T: c.WeakTypeTag](c: Context)(methodCall: c.Expr[T => Any]): c.Expr[Call[T]] = {
     import c.universe._
     val (methodTermName, valuesTrees) = methodCall.tree match {
       case Function(_, Select(_, methodTermName)) => (methodTermName, Nil)  
