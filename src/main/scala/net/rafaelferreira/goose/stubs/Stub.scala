@@ -6,6 +6,7 @@ import org.specs2.matcher.Matcher
 import scala.language.experimental.macros
 import scala.reflect.ClassTag
 
+/* TODO: extend Double */
 case class Stub[T: ClassTag](expectations: Seq[Expectation[T]] = Vector()) {
   lazy val results = 
     expectations.foldLeft(Map[String, AnyRef]()) {(map, expectation) =>

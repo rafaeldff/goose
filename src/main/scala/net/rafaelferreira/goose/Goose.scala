@@ -17,9 +17,9 @@ trait GooseStructure {this: Specification =>
   
   trait Assumption[D] {
     def relatedTo: GeneralDependency[D]
-    def apply(previous:Option[D]):Option[D]
+    def apply(double:TestDouble[D]):TestDouble[D]
   }
-  
+
   trait GeneralDependency[T] {
     var result: Option[T] = None
     
@@ -32,28 +32,33 @@ trait GooseStructure {this: Specification =>
   trait DirectDependency[T] {self: GeneralDependency[T] =>
     def ==>(value: T): Assumption[T] = new Assumption[T] {
       def relatedTo = self
-      def apply(previous:Option[T]) = Some(value)
+      def apply(previous:TestDouble[T]) = DirectDouble(value)
     }
   }
   
-  type DepGen[T] = Option[T] => Option[T]
+  //type DepGen[T] = Option[T] => Option[T]
+
+  trait TestDouble[+T]
+
+  object UninitializedDouble extends TestDouble[Nothing]
+  trait InitializedDouble[T] extends TestDouble[T] { def value: T }
+  //class StubDouble[T] extends InitializedDouble
+  case class DirectDouble[T](value:T) extends InitializedDouble[T] 
   
-  class State(assumptions: Map[GeneralDependency[_], Any] = Map().withDefaultValue((_:Any) => None)) {
+  class State(assumptions: Map[GeneralDependency[_], TestDouble[_]] = Map().withDefaultValue(UninitializedDouble)) {
     def assuming[T](assumption:Assumption[T]) = { 
-      val newDep: GeneralDependency[T] = assumption.relatedTo
-      val newGen: DepGen[T] = assumption.apply _
+      val dep: GeneralDependency[T] = assumption.relatedTo
       
-      val oldGen = getDepGen(newDep)
+      val oldDouble = getDouble(dep)
+      val newDouble  = assumption(oldDouble)
       
-      new State(assumptions + (newDep -> (oldGen andThen newGen)))
+      new State(assumptions + (dep -> newDouble))
     }
+
+    def getDouble[T](dep:GeneralDependency[T]):TestDouble[T] = assumptions(dep).asInstanceOf[TestDouble[T]]
     
-    private def getDepGen[T](dep: GeneralDependency[T]): DepGen[T] = {
-      assumptions(dep).asInstanceOf[DepGen[T]]
-    }
-    
-    def get[T](dep: GeneralDependency[T]): Option[T] = 
-      getDepGen(dep)(None)
+    def get[T](dep: GeneralDependency[T]): TestDouble[T] = 
+      getDouble(dep)
   }
   
   type ResultExpression[R] = Either[String,R]

@@ -12,19 +12,24 @@ trait Stubs { this: GooseStructure =>
   class Stubbing[T,R](dependency: GeneralDependency[T])(call: T => R) {
       def ==>(r: R) = new Assumption[T] {
         def relatedTo = dependency
-        def apply(previous: Option[T]) = {
-          val mock = previous match {
-            case None => mocker.mock(manifest)
-            case Some(mock) => mock
-          }
-          mocker.when(call(mock)).thenReturn(r)
-          Some(mock)
-        }
+        def apply(previous: TestDouble[T]) = UninitializedDouble
+          
+          //{
+          //val mock = previous match {
+            //case None => mocker.mock(manifest)
+            //case Some(mock) => mock
+          //}
+          //mocker.when(call(mock)).thenReturn(r)
+          //Some(mock)
+        //}
       }
     }
 
   case class ReturnAssumptionFactory[T](call:Call[T]) {
-    def ==>(result:Any):Assumption[T] = ???
+    def ==>(result:Any):Assumption[T] = new Assumption[T] {
+      def relatedTo = call.context.asInstanceOf[GeneralDependency[T]]
+      def apply(td:TestDouble[T]): TestDouble[T] = UninitializedDouble
+    }
   }
   
   implicit def call2returnAssumptionFactory[T](c:Call[T]) = new ReturnAssumptionFactory[T](c)
