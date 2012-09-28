@@ -38,10 +38,13 @@ trait GooseStructure {this: Specification =>
   
   //type DepGen[T] = Option[T] => Option[T]
 
-  trait TestDouble[+T]
+  trait TestDouble[+T] { def get:T = sys.error("should never happen") }
 
   object UninitializedDouble extends TestDouble[Nothing]
-  trait InitializedDouble[T] extends TestDouble[T] { def value: T }
+  trait InitializedDouble[T] extends TestDouble[T] { 
+    def value: T
+    override def get = value
+  }
   //class StubDouble[T] extends InitializedDouble
   case class DirectDouble[T](value:T) extends InitializedDouble[T] 
   

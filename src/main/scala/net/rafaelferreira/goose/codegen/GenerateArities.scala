@@ -25,7 +25,7 @@ object GenerateArities extends App with MiniTemplater {
   import scalax.io._
   import scalax.file.Path
   
-  val numberOfMethods = 22
+  val numberOfMethods = 3
   
   val destinationFile = Path("src", "main", "scala", "net", "rafaelferreira", "goose", "CheckingForVariousArities.scala").createFile(failIfExists=false)
   
