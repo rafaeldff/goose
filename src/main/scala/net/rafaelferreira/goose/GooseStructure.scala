@@ -2,14 +2,13 @@ package net.rafaelferreira
 package goose
 
 import scala.reflect.ClassTag
-import org.specs2.specification.Fragments
-import org.specs2.Specification
-import org.specs2.matcher.MatchResult
-import org.specs2.execute.Failure
 
+import org.specs2.Specification
+import org.specs2.execute.Failure
+import org.specs2.matcher.MatchResult
+import org.specs2.specification.Fragments
 
 trait GooseStructure extends Specification {
-  import scala.collection.immutable.Map
   
   type ResultExpression[R] = Environment => Either[String,R]
   
