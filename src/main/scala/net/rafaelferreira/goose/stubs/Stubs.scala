@@ -1,14 +1,11 @@
 package net.rafaelferreira.goose
 package stubs
 
-import org.specs2.Specification
 import scala.reflect.ClassTag
 
 import scala.language.experimental.macros
 
 trait Stubs { this: GooseStructure =>
-  private[Stubs] val mocker = new org.specs2.mock.MockitoMocker {}
-  
   class ReturnAssumptionFactory[T: ClassTag](call:Call[T]) {
     def ==>(result:AnyRef):Assumption[T] = new Assumption[T] {
       def relatedTo = call.context.asInstanceOf[GeneralDependency[T]]

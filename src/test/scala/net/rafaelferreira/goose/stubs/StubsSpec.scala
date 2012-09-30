@@ -3,7 +3,7 @@ package stubs
 
 import org.specs2.Specification
 
-class StubsSpec extends Specification with StubsStructure {
+class StubsSpec extends Specification {
   trait Bar {}
   trait Foo {
     def foo:String
