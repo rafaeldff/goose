@@ -30,18 +30,18 @@ object GenerateArities extends App with MiniTemplater {
   val destinationFile = Path("src", "main", "scala", "net", "rafaelferreira", "goose", "CheckingForVariousArities.scala").createFile(failIfExists=false)
   
   val checkMethod = 
-    """|  def check[%T#i: ClassTag%, R](resultExpression: (%T#i%) => R)(testDefinition: (%Dependency[T#i]%) => When[R] => When[R]): Fragments = {
-       |    val (%dep#i%) = (%dep[T#i]%)
-       |    val calcResult = {state:State =>
-       |      val (%value#i%) = (%state.get(dep#i)%)
-       |      whenAllPresent(Seq(%value#i%)) { resultExpression(%value#i.get%) }
-       |    }
-       |    
-       |    val when = new When[R](calcResult)
-       |    testDefinition(%dep#i%)(when).results
-       |  }
-       |""".stripMargin
-       
+       """|  def check[%T#i: ClassTag%, R](resultExpression: (%T#i%) => R)(testDefinition: (%Dependency[T#i]%) => When[R] => When[R]): Fragments = {
+          |    val (%dep#i%) = (%newDependency[T#i]("#i")%)
+          |    val calcResult = {state:Environment =>
+          |      (%state.get(dep#i)%) match {
+          |        case (%InitializedDouble(value#i)%) => Right(resultExpression(%value#i%))
+          |        case (%double#i%) => Left(reportMissing(Seq(%double#i%)))
+          |      }
+          |    }
+          |    val when = new When[R](calcResult)
+          |    testDefinition(%dep#i%)(when).results
+          |  }
+          |""".stripMargin
   
   def generatedCode = {
     val methods = (1 to numberOfMethods).map(expand(checkMethod, _))

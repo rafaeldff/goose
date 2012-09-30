@@ -14,7 +14,6 @@ trait CheckingForVariousArities extends CheckHelpers {self: GooseStructure with 
         case (double1) => Left(reportMissing(Seq(double1)))
       }
     }
-    
     val when = new When[R](calcResult)
     testDefinition(dep1)(when).results
   }
@@ -31,7 +30,7 @@ trait CheckingForVariousArities extends CheckHelpers {self: GooseStructure with 
     testDefinition(dep1, dep2)(when).results
   }
 
-  def check[T1: ClassTag, T2: ClassTag, T3: ClassTag, R](resultExpression: (T1, T2, T3) => R)(testDefinition: (Dependency[T1], Dependency[T2], Dependency[T3]) => When[R] => When[R]): Fragments ={
+  def check[T1: ClassTag, T2: ClassTag, T3: ClassTag, R](resultExpression: (T1, T2, T3) => R)(testDefinition: (Dependency[T1], Dependency[T2], Dependency[T3]) => When[R] => When[R]): Fragments = {
     val (dep1, dep2, dep3) = (newDependency[T1]("1"), newDependency[T2]("2"), newDependency[T3]("3"))
     val calcResult = {state:Environment =>
       (state.get(dep1), state.get(dep2), state.get(dep3)) match {
@@ -39,9 +38,8 @@ trait CheckingForVariousArities extends CheckHelpers {self: GooseStructure with 
         case (double1, double2, double3) => Left(reportMissing(Seq(double1, double2, double3)))
       }
     }
-    
     val when = new When[R](calcResult)
     testDefinition(dep1, dep2, dep3)(when).results
   }
-}
 
+}
