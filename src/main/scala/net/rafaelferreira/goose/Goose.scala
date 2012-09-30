@@ -32,15 +32,6 @@ trait GooseStructure {this: Specification =>
   trait GeneralDependency[T] {
   }
   
-  trait DirectDependency[T] {self: GeneralDependency[T] =>
-    def ==>(value: T): Assumption[T] = new Assumption[T] {
-      def relatedTo = self
-      def apply(previous:TestDouble[T]) = DirectDouble(value)
-    }
-  }
-  
-  case class DirectDouble[T](value:T) extends InitializedDouble[T] 
-  
   class Environment(bindings: Map[GeneralDependency[_], TestDouble[_]] = Map().withDefaultValue(UninitializedDouble)) {
     def assuming[T](assumption:Assumption[T]) = {
       val oldDouble = get(assumption.relatedTo)
@@ -87,7 +78,7 @@ trait GooseStructure {this: Specification =>
   def newDependency[T: ClassTag](name:String): Dependency[T]
 }
 
-trait Goose extends GooseStructure with CheckingForVariousArities with stubs.Stubs {self: Specification =>
+trait Goose extends GooseStructure with CheckingForVariousArities with stubs.Stubs with direct.Direct {self: Specification =>
   class ActualDependency[T: ClassTag](name:String) extends GeneralDependency[T] with DirectDependency[T] with StubDependency[T] {self =>
     override def toString = "DEP[%s]" format name
   }
