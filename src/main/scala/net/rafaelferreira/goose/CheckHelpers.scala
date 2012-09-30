@@ -16,3 +16,4 @@ trait CheckHelpers {self: GooseStructure =>
     }
   }
 }
+
