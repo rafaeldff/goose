@@ -12,39 +12,8 @@ import org.specs2.specification.Fragment
 import org.specs2.execute.Failure
 import scala.reflect.ClassTag
 
-trait TestDouble[+T]
-object UninitializedDouble extends TestDouble[Nothing]
-trait InitializedDouble[T] extends TestDouble[T] {
-  def value: T
-}
-object InitializedDouble {
-  def unapply[T](double: InitializedDouble[T]) = Some(double.value)
-}
-
 trait GooseStructure {this: Specification =>
   import scala.collection.immutable.Map
-  
-  trait Assumption[D] {
-    def relatedTo: GeneralDependency[D]
-    def apply(double:TestDouble[D]):TestDouble[D]
-  }
-
-  trait GeneralDependency[T] {
-  }
-  
-  class Environment(bindings: Map[GeneralDependency[_], TestDouble[_]] = Map().withDefaultValue(UninitializedDouble)) {
-    def assuming[T](assumption:Assumption[T]) = {
-      val oldDouble = get(assumption.relatedTo)
-      val newDouble  = assumption(oldDouble)
-      
-      new Environment(bindings + ((assumption.relatedTo) -> newDouble))
-    }
-
-    def get[T](dep: GeneralDependency[T]): TestDouble[T] = 
-      bindings(dep).asInstanceOf[TestDouble[T]]
-    
-    override def toString = "State("+bindings.toString+")"
-  }
   
   type ResultExpression[R] = Environment => Either[String,R]
   
