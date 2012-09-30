@@ -9,7 +9,7 @@ class GooseSpec extends Specification with ResultMatchers with Goose {
     def is = "variable assumption passing"      ^ e1 ^
              "variable assumption failing"      ^ e2 ^ 
              "stub assumption passing"          ^ e3 ^
-             "stub assumption failing"          ^ e4 ^
+             "stub assumption failing"          ^ e4 ^ 
              "mixed assumptions passing"        ^ e5 ^
              "variable assumption overriding"   ^ e6 ^ 
              "mock assumption overriding"       ^ e7 ^

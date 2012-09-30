@@ -4,9 +4,9 @@ package sample
 import org.specs2.Specification
 
 class AddressMapperSpec extends Specification with Goose {
-  def is =  "Street mapping" ^`street mapping` ^
+  def is =  pending /*"Street mapping" ^`street mapping` ^
             "Address mapping" ^`address mapping` ^
-            end
+            end*/
     
   def `address mapping` = check(new DatabaseBackedAddressMapper(_:Database).mapAddress(_:String)) {(database, addressId) => 
     _.when(addressId ==> "123").

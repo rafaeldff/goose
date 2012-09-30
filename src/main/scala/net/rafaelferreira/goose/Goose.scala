@@ -12,6 +12,15 @@ import org.specs2.specification.Fragment
 import org.specs2.execute.Failure
 import scala.reflect.ClassTag
 
+trait TestDouble[+T]
+object UninitializedDouble extends TestDouble[Nothing]
+trait InitializedDouble[T] extends TestDouble[T] {
+  def value: T
+}
+object InitializedDouble {
+  def unapply[T](double: InitializedDouble[T]) = Some(double.value)
+}
+
 trait GooseStructure {this: Specification =>
   import scala.collection.immutable.Map
   
@@ -36,16 +45,8 @@ trait GooseStructure {this: Specification =>
     }
   }
   
-  //type DepGen[T] = Option[T] => Option[T]
 
-  trait TestDouble[+T] { def get:T = sys.error("should never happen") }
-
-  object UninitializedDouble extends TestDouble[Nothing]
-  trait InitializedDouble[T] extends TestDouble[T] { 
-    def value: T
-    override def get = value
-  }
-  //class StubDouble[T] extends InitializedDouble
+  
   case class DirectDouble[T](value:T) extends InitializedDouble[T] 
   
   class State(assumptions: Map[GeneralDependency[_], TestDouble[_]] = Map().withDefaultValue(UninitializedDouble)) {
@@ -58,10 +59,15 @@ trait GooseStructure {this: Specification =>
       new State(assumptions + (dep -> newDouble))
     }
 
-    def getDouble[T](dep:GeneralDependency[T]):TestDouble[T] = assumptions(dep).asInstanceOf[TestDouble[T]]
+    def getDouble[T](dep:GeneralDependency[T]):TestDouble[T] = 
+      assumptions(dep).asInstanceOf[TestDouble[T]]
     
-    def get[T](dep: GeneralDependency[T]): TestDouble[T] = 
-      getDouble(dep)
+    def get[T](dep: GeneralDependency[T]): TestDouble[T] = { 
+      val res = getDouble(dep)
+      res
+    }
+    
+    override def toString = "State("+assumptions.toString+")"
   }
   
   type ResultExpression[R] = Either[String,R]
@@ -95,17 +101,17 @@ trait GooseStructure {this: Specification =>
   
   type Dependency[T] <: GeneralDependency[T]
   
-  def dep[T: ClassTag]: Dependency[T]
+  def dep[T: ClassTag](name:String): Dependency[T]
 }
 
 
 trait Goose extends GooseStructure with CheckingForVariousArities with stubs.Stubs {self: Specification =>
-  class ActualDependency[T: ClassTag] extends GeneralDependency[T] with DirectDependency[T] with StubDependency[T] {self =>
+  class ActualDependency[T: ClassTag](name:String) extends GeneralDependency[T] with DirectDependency[T] with StubDependency[T] {self =>
     val manifest = implicitly[ClassTag[T]]
-    override def toString = "DEP[%s]" format result
+    override def toString = "DEP[%s]" format name
   }
   
   type Dependency[T] = ActualDependency[T]
   
-  def dep[T: ClassTag]: ActualDependency[T] = new ActualDependency[T]
+  def dep[T: ClassTag](name:String): ActualDependency[T] = new ActualDependency[T](name)
 }

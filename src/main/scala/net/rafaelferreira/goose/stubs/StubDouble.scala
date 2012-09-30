@@ -6,17 +6,16 @@ import org.specs2.matcher.Matcher
 import scala.language.experimental.macros
 import scala.reflect.ClassTag
 
-/* TODO: extend Double */
-case class Stub[T: ClassTag](expectations: Seq[Expectation[T]] = Vector()) {
+case class StubDouble[T: ClassTag](expectations: Seq[Expectation[T]] = Vector()) extends InitializedDouble[T] {
   lazy val results = 
     expectations.foldLeft(Map[String, AnyRef]()) {(map, expectation) =>
       map + (expectation.methodCalled -> expectation.result) 
     }
   
-  def expecting[R](expectation:Expectation[T]):Stub[T] = 
+  def expecting[R](expectation:Expectation[T]):StubDouble[T] = 
     copy(expectations = expectations :+ expectation) 
   
-  def stubObject: T = 
+  def value: T = 
     ProxyFactory { (obj:Object, method:Method, args:Array[Object]) =>
       results(method.getName)
     }
@@ -53,7 +52,7 @@ trait FakeArgument {
   
 trait StubsStructure {
   
-  implicit def argThat[T: ClassTag, U <: T](m: Matcher[U]): T = {
+  /*implicit def argThat[T: ClassTag, U <: T](m: Matcher[U]): T = {
     val parameterClass = implicitly[ClassTag[T]].runtimeClass
     ProxyFactory.make(parameterClass, classOf[FakeArgument]) {(obj:AnyRef, method:Method, args:Array[AnyRef]) =>
       method.getName match {
@@ -61,6 +60,6 @@ trait StubsStructure {
         case _ => null
       }
     }
-  }
+  }*/
     
 }

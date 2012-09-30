@@ -9,30 +9,20 @@ import scala.language.experimental.macros
 trait Stubs { this: GooseStructure =>
   private[Stubs] val mocker = new org.specs2.mock.MockitoMocker {}
   
-  class Stubbing[T,R](dependency: GeneralDependency[T])(call: T => R) {
-      def ==>(r: R) = new Assumption[T] {
-        def relatedTo = dependency
-        def apply(previous: TestDouble[T]) = UninitializedDouble
-          
-          //{
-          //val mock = previous match {
-            //case None => mocker.mock(manifest)
-            //case Some(mock) => mock
-          //}
-          //mocker.when(call(mock)).thenReturn(r)
-          //Some(mock)
-        //}
-      }
-    }
-
-  case class ReturnAssumptionFactory[T](call:Call[T]) {
-    def ==>(result:Any):Assumption[T] = new Assumption[T] {
+  class ReturnAssumptionFactory[T: ClassTag](call:Call[T]) {
+    def ==>(result:AnyRef):Assumption[T] = new Assumption[T] {
       def relatedTo = call.context.asInstanceOf[GeneralDependency[T]]
-      def apply(td:TestDouble[T]): TestDouble[T] = UninitializedDouble
+      def apply(testDouble: TestDouble[T]): TestDouble[T] =
+        testDouble match {
+        case UninitializedDouble => StubDouble(Vector(Expectation(call,result)))
+        case StubDouble(expectations) => StubDouble(expectations :+ Expectation(call, result))
+        case _ => sys.error("Cannot mix stub with non-stub expectations.")
+      }
     }
   }
   
-  implicit def call2returnAssumptionFactory[T](c:Call[T]) = new ReturnAssumptionFactory[T](c)
+  implicit def call2returnAssumptionFactory[T: ClassTag](c:Call[T]):ReturnAssumptionFactory[T] =
+    new ReturnAssumptionFactory[T](c)
 
   trait StubDependency[T] { self: GeneralDependency[T] =>
     val manifest: ClassTag[T]
