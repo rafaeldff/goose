@@ -7,3 +7,4 @@ target/
 src/main/scala/net/rafaelferreira/goose/Macros.scala
 *.swp
 *.swo
+bin
