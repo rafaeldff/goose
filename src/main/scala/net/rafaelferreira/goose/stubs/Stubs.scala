@@ -25,8 +25,6 @@ trait Stubs { this: GooseStructure =>
     new ReturnAssumptionFactory[T](c)
 
   trait StubDependency[T] { self: GeneralDependency[T] =>
-    val manifest: ClassTag[T]
-
     def stub(methodCall: T => Any): Call[T] = macro CallMacro.capture_impl[T]
   }
 }

@@ -30,12 +30,6 @@ trait GooseStructure {this: Specification =>
   }
 
   trait GeneralDependency[T] {
-    var result: Option[T] = None
-    
-    def apply():T = result match {
-      case Some(result) => result
-      case None => throw new RuntimeException("Dependency wasn't setup properly")
-    } 
   }
   
   trait DirectDependency[T] {self: GeneralDependency[T] =>
@@ -97,7 +91,6 @@ trait GooseStructure {this: Specification =>
 
 trait Goose extends GooseStructure with CheckingForVariousArities with stubs.Stubs {self: Specification =>
   class ActualDependency[T: ClassTag](name:String) extends GeneralDependency[T] with DirectDependency[T] with StubDependency[T] {self =>
-    val manifest = implicitly[ClassTag[T]]
     override def toString = "DEP[%s]" format name
   }
   
