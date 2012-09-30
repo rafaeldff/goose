@@ -58,7 +58,6 @@ trait GooseStructure {this: Specification =>
   type ResultExpression[R] = Environment => Either[String,R]
   
   class When[R](resultExpression: ResultExpression[R], environment: Environment = new Environment(), val fragments:Fragments = Fragments()) {
-    
     def when[T](assumption: Assumption[T]): When[R] = copy(newState = environment.assuming(assumption)) 
     def and[T](assumption: Assumption[T]): When[R] = when(assumption)
     
@@ -79,13 +78,13 @@ trait GooseStructure {this: Specification =>
     
     def results: Fragments = fragments ^ end
     
-    def copy(newResultExpression: ResultExpression[R] = resultExpression, newState: Environment = environment, newFragments:Fragments = fragments) =
+    private def copy(newResultExpression: ResultExpression[R] = resultExpression, newState: Environment = environment, newFragments:Fragments = fragments) =
       new When(newResultExpression, newState, newFragments)
     
   }
   
   type Dependency[T] <: GeneralDependency[T]
-  def dep[T: ClassTag](name:String): Dependency[T]
+  def newDependency[T: ClassTag](name:String): Dependency[T]
 }
 
 trait Goose extends GooseStructure with CheckingForVariousArities with stubs.Stubs {self: Specification =>
@@ -95,5 +94,5 @@ trait Goose extends GooseStructure with CheckingForVariousArities with stubs.Stu
   
   type Dependency[T] = ActualDependency[T]
   
-  def dep[T: ClassTag](name:String): ActualDependency[T] = new ActualDependency[T](name)
+  def newDependency[T: ClassTag](name:String): ActualDependency[T] = new ActualDependency[T](name)
 }
