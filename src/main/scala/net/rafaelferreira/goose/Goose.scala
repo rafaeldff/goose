@@ -55,9 +55,9 @@ trait GooseStructure {this: Specification =>
     override def toString = "State("+bindings.toString+")"
   }
   
-  type ResultExpression[R] = Either[String,R]
+  type ResultExpression[R] = Environment => Either[String,R]
   
-  class When[R](resultExpression: Environment => ResultExpression[R], environment: Environment = new Environment(), val fragments:Fragments = Fragments()) {
+  class When[R](resultExpression: ResultExpression[R], environment: Environment = new Environment(), val fragments:Fragments = Fragments()) {
     
     def when[T](assumption: Assumption[T]): When[R] = copy(newState = environment.assuming(assumption)) 
     def and[T](assumption: Assumption[T]): When[R] = when(assumption)
@@ -79,13 +79,12 @@ trait GooseStructure {this: Specification =>
     
     def results: Fragments = fragments ^ end
     
-    def copy(newResultExpression: (Environment => ResultExpression[R]) = resultExpression, newState: Environment = environment, newFragments:Fragments = fragments) =
+    def copy(newResultExpression: ResultExpression[R] = resultExpression, newState: Environment = environment, newFragments:Fragments = fragments) =
       new When(newResultExpression, newState, newFragments)
     
   }
   
   type Dependency[T] <: GeneralDependency[T]
-  
   def dep[T: ClassTag](name:String): Dependency[T]
 }
 
