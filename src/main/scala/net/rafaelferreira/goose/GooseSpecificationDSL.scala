@@ -8,7 +8,7 @@ import org.specs2.execute.Failure
 import org.specs2.matcher.MatchResult
 import org.specs2.specification.Fragments
 
-trait GooseStructure extends Specification {
+trait GooseSpecificationDSL extends Specification {
   
   type ResultExpression[R] = Environment => Either[String,R]
   

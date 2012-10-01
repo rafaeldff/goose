@@ -5,7 +5,7 @@ import org.specs2.specification.Fragments
 import org.specs2.Specification
 
 
-trait CheckingForVariousArities extends CheckHelpers {self: GooseStructure with Specification =>
+trait CheckingForVariousArities extends CheckHelpers {self: GooseSpecificationDSL with Specification =>
   def check[T1: ClassTag, R](resultExpression: (T1) => R)(testDefinition: (Dependency[T1]) => When[R] => When[R]): Fragments = {
     val (dep1) = (newDependency[T1]("1"))
     val calcResult = {state:Environment =>

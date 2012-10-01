@@ -1,6 +1,6 @@
 package net.rafaelferreira.goose
 
-trait CheckHelpers {self: GooseStructure =>  
+trait CheckHelpers {self: GooseSpecificationDSL =>  
   import PartialFunction._
   
   def reportMissing(vs: Seq[TestDouble[_]]) = {

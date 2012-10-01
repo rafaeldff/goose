@@ -3,7 +3,7 @@ package direct
 
 case class DirectDouble[T](value:T) extends InitializedDouble[T]
 
-trait Direct { this: GooseStructure =>
+trait Direct { this: GooseSpecificationDSL =>
   trait DirectDependency[T] { self: GeneralDependency[T] =>
     def ==>(value: T): Assumption[T] = new Assumption[T] {
       def relatedTo = self
