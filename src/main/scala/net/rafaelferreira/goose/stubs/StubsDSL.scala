@@ -5,7 +5,7 @@ import scala.reflect.ClassTag
 
 import scala.language.experimental.macros
 
-trait Stubs { this: GooseSpecificationDSL =>
+trait StubsDSL { this: GooseSpecificationDSL =>
   class ReturnAssumptionFactory[T: ClassTag](call:Call[T]) {
     def ==>(result:AnyRef):Assumption[T] = new Assumption[T] {
       def relatedTo = call.context.asInstanceOf[GeneralDependency[T]]
