@@ -12,7 +12,7 @@ trait StubsDSL { this: GooseSpecificationDSL =>
       def apply(testDouble: TestDouble[T]): TestDouble[T] =
         testDouble match {
         case UninitializedDouble => StubDouble(Vector(Expectation(call,result)))
-        case StubDouble(expectations) => StubDouble(expectations :+ Expectation(call, result))
+        case double:StubDouble[T] => double expecting Expectation(call, result)
         case _ => sys.error("Cannot mix stub with non-stub expectations.")
       }
     }

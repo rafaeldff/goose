@@ -8,9 +8,10 @@ object ProxyFactory {
   
   type Subject = AnyRef
   type Arguments = Array[AnyRef]
-  type Method = ReflectMethod
+  type Method = String
+  case class Invocation(subject:Subject, method:Method, arguments:Arguments) 
   
-  type ProxyReaction = (Subject, Method, Arguments) => AnyRef
+  type ProxyReaction = Invocation => AnyRef
   
   def apply[T:ClassTag](reaction: ProxyReaction):T = { 
       val javaClass = implicitly[ClassTag[T]].runtimeClass
@@ -19,8 +20,8 @@ object ProxyFactory {
   
   def make[Result](cls:Class[_]*)(reaction:ProxyReaction):Result = {
     val handler = new InvocationHandler {
-      def invoke(obj:Object, method:Method, args:Array[Object]) = 
-        reaction(obj, method, args)
+      def invoke(obj:Object, method:ReflectMethod, args:Array[Object]) = 
+        reaction(Invocation(obj, method.getName, (if (args == null) Array[Object]() else args)))
     }
         
     Proxy.newProxyInstance(Thread.currentThread.getContextClassLoader, Array(cls:_*), handler).asInstanceOf[Result]
