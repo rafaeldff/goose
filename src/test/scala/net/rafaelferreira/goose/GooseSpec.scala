@@ -6,10 +6,12 @@ import org.specs2.execute._
 
 
 class GooseSpec extends Specification with ResultMatchers with Goose {
-    def is = "variable assumption passing"      ^ e1 ^
+    def is = args.report(failtrace=true) ^
+             "variable assumption passing"      ^ e1 ^
              "variable assumption failing"      ^ e2 ^ 
              "stub assumption passing"          ^ e3 ^
-             "stub assumption failing"          ^ e4 ^ 
+             "stub assumption failing"          ^ e4 ^
+             "allows stub expectation results to be other dependencies" ^ e18 ^ e19 ^
              "mixed assumptions passing"        ^ e5 ^
              "variable assumption overriding"   ^ e6 ^ 
              "mock assumption overriding"       ^ e7 ^
@@ -190,5 +192,46 @@ class GooseSpec extends Specification with ResultMatchers with Goose {
    fragments.examples.head.execute must beFailing
  }
  
+ def e18 = {
+    trait Bar { def makeBaz:Baz }
+    trait Baz { def bazz:String }
 
+    check((bar:Bar, baz:Baz) => bar.makeBaz.bazz) { (bar, baz) =>
+      _.when(baz.stub(_.bazz) ==> "called bazz!").
+        and(bar.stub(_.makeBaz) ==> baz).
+        then(_ must_== "called bazz!")
+    }
+  }
+
+  def e19 = {
+    class Foo { def op(baz:Baz) =  baz.bazz }
+    trait Bar { def makeBaz:Baz }
+    trait Baz { def bazz:String }
+
+    check((bar:Bar, baz:Baz) => (new Foo).op(bar.makeBaz)) { (bar, baz) =>
+      _.when(baz.stub(_.bazz) ==> "called bazz!").
+        and(bar.stub(_.makeBaz) ==> baz).
+        then(_ must_== "called bazz!")
+    }
+  }
+ 
+
+}
+
+
+object Foobar extends Goose with Specification {
+  def is = ok
+  
+  class Foo { def op(baz:Baz) =  baz.bazz }
+    trait Bar { def makeBaz:Baz }
+    trait Baz { def bazz:String }
+
+    def main(args: Array[String]) { 
+       check((bar:Bar, baz:Baz) => (new Foo).op(bar.makeBaz)) { (bar, baz) =>
+      _.when(baz.stub(_.bazz) ==> "called bazz!").
+        and(bar.stub(_.makeBaz) ==> baz).
+        then(_ must_== "called bazz!")
+    }
+    }
+  
 }
