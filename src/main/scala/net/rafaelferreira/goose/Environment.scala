@@ -21,14 +21,17 @@ trait Assumption[D] {
 
 class Environment(bindings: Map[GeneralDependency[_], TestDouble[_]] = Map().withDefaultValue(UninitializedDouble)) {
   def assuming[T](assumption: Assumption[T]) = {
-    val oldDouble = get(assumption.relatedTo)
+    val oldDouble = bindingFor(assumption.relatedTo)
     val newDouble = assumption(oldDouble, this)
 
     new Environment(bindings + ((assumption.relatedTo) -> newDouble))
   }
 
-  def get[T](dep: GeneralDependency[T]): TestDouble[T] =
+  def bindingFor[T](dep: GeneralDependency[T]): TestDouble[T] =
     bindings(dep).asInstanceOf[TestDouble[T]]
+  
+  def valueFor[T](dep: GeneralDependency[T]): Option[T] =
+    bindingFor[T](dep).value(this)
 
   override def toString = "State(" + bindings.toString + ")"
 }

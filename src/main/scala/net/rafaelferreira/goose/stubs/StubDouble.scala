@@ -13,10 +13,15 @@ case class StubDouble[T: ClassTag](expectations: Seq[Expectation[T]] = Vector())
   def expecting[R](expectation:Expectation[T]):StubDouble[T] = 
     copy(expectations = expectation +: expectations) 
   
-  def value: T = 
-    ProxyFactory { invocation =>
-      expectations.find(_ appliesTo invocation).map(_.result).getOrElse( default )
-    }
+  def value(env:Environment) = 
+    Some(ProxyFactory { invocation =>
+      val expectedResult = expectations.find(_ appliesTo invocation).map(_.result)
+      val result = expectedResult match {
+        case Some(dependency:GeneralDependency[AnyRef]) => env.valueFor[AnyRef](dependency)
+        case anything:AnyRef => anything
+      }
+      result.getOrElse(default)
+    })
   
   def default = null
 }

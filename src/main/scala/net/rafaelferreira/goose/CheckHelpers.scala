@@ -3,8 +3,8 @@ package net.rafaelferreira.goose
 trait CheckHelpers {self: GooseSpecificationDSL =>  
   import PartialFunction._
   
-  def reportMissing(vs: Seq[TestDouble[_]]) = {
-    val missing = vs.zipWithIndex.filterNot {cond(_){case (InitializedDouble(_), i) => true}}
+  def reportMissing(vs: Seq[Option[_]]) = {
+    val missing = vs.zipWithIndex.filterNot {cond(_){case (Some(_), i) => true}}
     "No value was supplied for dependencies %s. Did you forget 'when' or 'and' clauses?" format (missing.mkString("[", ",", "]"))
   }
   

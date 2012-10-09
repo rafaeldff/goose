@@ -1,7 +1,9 @@
 package net.rafaelferreira.goose
 package direct
 
-case class DirectDouble[T](value:T) extends InitializedDouble[T]
+case class DirectDouble[T](value:T) extends InitializedDouble[T] {
+  def value(env:Environment) = Some(value)
+}
 
 trait DirectDSL { this: GooseSpecificationDSL =>
   trait DirectDependency[T] { self: GeneralDependency[T] =>

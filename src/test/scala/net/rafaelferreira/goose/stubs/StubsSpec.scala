@@ -9,6 +9,7 @@ class StubsSpec extends Specification {
     def foo:String
     def takesBar(bar:Bar):String
   }
+  def env = new Environment
   
   def is =  "Stub" ^ p ^
               "Giving argument matchers" ^ 
@@ -25,14 +26,14 @@ class StubsSpec extends Specification {
   def stubNoArgs = {
     val stub = new StubDouble[Foo]
     val expecting = stub.expecting(Expectation(Call(this, "foo", Nil), "result"))
-    expecting.value.foo must_== "result"
+    expecting.value(env).get.foo must_== "result"
   }
   
   def stubWithArgs = {
     val stub = new StubDouble[Foo]
     val barParameter = new Bar {}
     val expecting = stub.expecting(Expectation(Call(this, "takesBar", Seq(===(barParameter))), "result"))
-    expecting.value.takesBar(barParameter) must_== "result"
+    expecting.value(env).get.takesBar(barParameter) must_== "result"
   }
   
   def stubWithDifferentArgs = {
@@ -41,7 +42,7 @@ class StubsSpec extends Specification {
     val differentBarParameter = new Bar {}
     val expectingFirst = stub.expecting(Expectation(Call(this, "takesBar", Seq(===(barParameter))), "first"))
     val expectingBoth = expectingFirst.expecting(Expectation(Call(this, "takesBar", Seq(===(differentBarParameter))), "second"))
-    (expectingBoth.value.takesBar(barParameter) must_== "first") and (expectingBoth.value.takesBar(differentBarParameter) must_== "second")
+    (expectingBoth.value(env).get.takesBar(barParameter) must_== "first") and (expectingBoth.value(env).get.takesBar(differentBarParameter) must_== "second")
   }
   
   def stubOverriding = {
@@ -49,7 +50,7 @@ class StubsSpec extends Specification {
     val barParameter = new Bar {}
     val expectingFirst = stub.expecting(Expectation(Call(this, "takesBar", Seq(===(barParameter))), "first"))
     val expectingSecond = expectingFirst.expecting(Expectation(Call(this, "takesBar", Seq(===(barParameter))), "second"))
-    expectingSecond.value.takesBar(barParameter) must_== "second"
+    expectingSecond.value(env).get.takesBar(barParameter) must_== "second"
   }
   
   def stubWithDifferentLiteralArgs = {
@@ -59,7 +60,7 @@ class StubsSpec extends Specification {
     val expectingFirst = stub.expecting(Expectation(Call(this, "takesBar", Seq(barParameter)), "first"))
     val expectingBoth = expectingFirst.expecting(Expectation(Call(this, "takesBar", Seq(differentBarParameter)), "second"))
     
-    (expectingBoth.value.takesBar(barParameter) must_== "first") and (expectingBoth.value.takesBar(differentBarParameter) must_== "second")
+    (expectingBoth.value(env).get.takesBar(barParameter) must_== "first") and (expectingBoth.value(env).get.takesBar(differentBarParameter) must_== "second")
   }
   
   def stubWithDifferentMixedArgs = {
@@ -72,9 +73,9 @@ class StubsSpec extends Specification {
     val expectingSecond = expectingFirst.expecting(Expectation(Call(this, "takesBar", Seq(===(differentBarParameter))), "second"))
     val expectingAllThree = expectingSecond.expecting(Expectation(Call(this, "takesBar", Seq(yetAnotherBarParameter)), "third"))
     
-    (expectingAllThree.value.takesBar(barParameter) must_== "first") and 
-    (expectingAllThree.value.takesBar(differentBarParameter) must_== "second") and
-    (expectingAllThree.value.takesBar(yetAnotherBarParameter) must_== "third")
+    (expectingAllThree.value(env).get.takesBar(barParameter) must_== "first") and 
+    (expectingAllThree.value(env).get.takesBar(differentBarParameter) must_== "second") and
+    (expectingAllThree.value(env).get.takesBar(yetAnotherBarParameter) must_== "third")
   }
   
 }
