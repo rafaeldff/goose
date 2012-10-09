@@ -33,8 +33,8 @@ object GenerateArities extends App with MiniTemplater {
        """|  def check[%T#i: ClassTag%, R](resultExpression: (%T#i%) => R)(testDefinition: (%Dependency[T#i]%) => When[R] => When[R]): Fragments = {
           |    val (%dep#i%) = (%newDependency[T#i]("#i")%)
           |    val calcResult = {state:Environment =>
-          |      (%state.get(dep#i)%) match {
-          |        case (%InitializedDouble(value#i)%) => Right(resultExpression(%value#i%))
+          |      (%state.valueFor(dep#i)%) match {
+          |        case (%Some(value#i)%) => Right(resultExpression(%value#i%))
           |        case (%double#i%) => Left(reportMissing(Seq(%double#i%)))
           |      }
           |    }
@@ -54,7 +54,7 @@ object GenerateArities extends App with MiniTemplater {
        |import org.specs2.Specification
        |
        |
-       |trait CheckingForVariousArities extends CheckHelpers {self: GooseStructure with Specification =>
+       |trait CheckingForVariousArities extends CheckHelpers {self: GooseSpecificationDSL with Specification =>
        |%s
        |}
        |""".stripMargin.format(body) 
