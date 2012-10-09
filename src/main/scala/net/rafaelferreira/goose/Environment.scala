@@ -16,13 +16,13 @@ trait GeneralDependency[T] {
 
 trait Assumption[D] {
   def relatedTo: GeneralDependency[D]
-  def apply(double: TestDouble[D], env:Environment): TestDouble[D]
+  def apply(double: TestDouble[D]): TestDouble[D]
 }
 
 class Environment(bindings: Map[GeneralDependency[_], TestDouble[_]] = Map().withDefaultValue(UninitializedDouble)) {
   def assuming[T](assumption: Assumption[T]) = {
     val oldDouble = bindingFor(assumption.relatedTo)
-    val newDouble = assumption(oldDouble, this)
+    val newDouble = assumption(oldDouble)
 
     new Environment(bindings + ((assumption.relatedTo) -> newDouble))
   }

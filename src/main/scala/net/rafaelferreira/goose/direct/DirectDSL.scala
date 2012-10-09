@@ -9,7 +9,7 @@ trait DirectDSL { this: GooseSpecificationDSL =>
   trait DirectDependency[T] { self: GeneralDependency[T] =>
     def ==>(value: T): Assumption[T] = new Assumption[T] {
       def relatedTo = self
-      def apply(previous: TestDouble[T], ignored:Environment) = DirectDouble(value)
+      def apply(previous: TestDouble[T]) = DirectDouble(value)
     }
   }
 

@@ -9,7 +9,7 @@ trait StubsDSL { this: GooseSpecificationDSL =>
   class ReturnAssumptionFactory[T: ClassTag](call:Call[T]) {
     def ==>(result:AnyRef):Assumption[T] = new Assumption[T] {
       def relatedTo = call.context.asInstanceOf[GeneralDependency[T]]
-      def apply(testDouble: TestDouble[T], ignored:Environment): TestDouble[T] =
+      def apply(testDouble: TestDouble[T]): TestDouble[T] =
         testDouble match {
         case UninitializedDouble => StubDouble(Vector(Expectation(call,result)))
         case double:StubDouble[T] => double expecting Expectation(call, result)
