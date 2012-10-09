@@ -11,7 +11,7 @@ class GooseSpec extends Specification with ResultMatchers with Goose {
              "variable assumption failing"      ^ e2 ^ 
              "stub assumption passing"          ^ e3 ^
              "stub assumption failing"          ^ e4 ^
-             "allows stub expectation results to be other dependencies" ^ e18 ^ e19 ^
+             "allows stub expectation results to be other dependencies" ^ e18 ^ e19 ^e20 ^
              "mixed assumptions passing"        ^ e5 ^
              "variable assumption overriding"   ^ e6 ^ 
              "mock assumption overriding"       ^ e7 ^
@@ -202,8 +202,19 @@ class GooseSpec extends Specification with ResultMatchers with Goose {
         then(_ must_== "called bazz!")
     }
   }
+ 
+ def e19 = {
+    trait Bar { def makeBaz:Baz }
+    trait Baz { def bazz:String }
 
-  def e19 = {
+    check((bar:Bar, baz:Baz) => bar.makeBaz.bazz) { (bar, baz) =>
+      _.and(bar.stub(_.makeBaz) ==> baz).
+        when(baz.stub(_.bazz) ==> "called bazz!").
+        then(_ must_== "called bazz!")
+    }
+  }
+
+  def e20 = {
     class Foo { def op(baz:Baz) =  baz.bazz }
     trait Bar { def makeBaz:Baz }
     trait Baz { def bazz:String }

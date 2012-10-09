@@ -1,14 +1,15 @@
 package net.rafaelferreira
 package goose
 
-trait TestDouble[+T]
-object UninitializedDouble extends TestDouble[Nothing]
+trait TestDouble[+T] {
+  def value(environment:Environment):Option[T]
+}
+object UninitializedDouble extends TestDouble[Nothing] {
+  def value(environment:Environment) = None
+}
 trait InitializedDouble[T] extends TestDouble[T] {
-  def value: T
 }
-object InitializedDouble {
-  def unapply[T](double: InitializedDouble[T]) = Some(double.value)
-}
+
 
 trait GeneralDependency[T] {
 }
