@@ -24,4 +24,6 @@ trait StubsDSL { this: GooseSpecificationDSL =>
   trait StubDependency[T] { self: GeneralDependency[T] =>
     def stub(methodCall: T => Any): Call[T] = macro CallMacro.capture_impl[T]
   }
+  
+  
 }

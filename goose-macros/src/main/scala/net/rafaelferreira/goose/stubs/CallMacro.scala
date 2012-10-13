@@ -28,9 +28,24 @@ object CallMacro {
         Select(
           Select(Select(Select(Ident("scala"), newTermName("collection")), newTermName("immutable")), newTermName("List")),
           newTermName("apply")),
-        valuesTrees)
+        filterArguments(c)(valuesTrees))
     val valueListExpression = c.Expr[List[Any]](valueListTree)
     
     reify(new Call[T](c.prefix.splice, methodNameExpression.splice, valueListExpression.splice))
   }
+  
+  def filterArguments(c:Context)(arguments:List[c.Tree]): List[c.Tree] = { 
+    import c.universe._
+    
+    val unwrapDependencyImplicitMethod = newTermName("unwrapDependency")
+    
+    arguments.map {
+      case Apply(TypeApply(Select(_, methodName), _), List(dependencyArgument)) if methodName == unwrapDependencyImplicitMethod =>  
+        //c.info(c.enclosingPosition, "Implicit dependency found", false)
+        dependencyArgument
+      case other => 
+        other 
+    }
+  }
+  
 }

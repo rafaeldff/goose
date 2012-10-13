@@ -8,10 +8,14 @@ object UninitializedDouble extends TestDouble[Nothing] {
   def value(environment:Environment) = None
 }
 trait InitializedDouble[T] extends TestDouble[T] {
+   
 }
 
-
 trait GeneralDependency[T] {
+}
+
+object GeneralDependency {
+  implicit def unwrapDependency[T](dep:GeneralDependency[T]):T = ???
 }
 
 trait Assumption[D] {

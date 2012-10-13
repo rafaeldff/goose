@@ -15,7 +15,7 @@ case class StubDouble[T: ClassTag](expectations: Seq[Expectation[T]] = Vector())
   
   def value(env:Environment) = 
     Some(ProxyFactory { invocation =>
-      val expectedResult = expectations.find(_ appliesTo invocation).map(_.result)
+      val expectedResult = expectations.find{_ appliesTo (invocation, env)}.map(_.result)
       val result = expectedResult match {
         case Some(dependency:GeneralDependency[AnyRef]) => env.valueFor[AnyRef](dependency)
         case anything:AnyRef => anything
@@ -28,11 +28,12 @@ case class StubDouble[T: ClassTag](expectations: Seq[Expectation[T]] = Vector())
 
 case class Expectation[T:ClassTag](call: Call[T], resultObject: AnyRef) {
   val methodCalled = call.method
-  def appliesTo(invocation: Invocation): Boolean = {
+  def appliesTo(invocation: Invocation, env:Environment): Boolean = {
     def methodMatches = call.method == invocation.method
     def aritiesMatch = call.args.size == invocation.arguments.size 
     def argumentsMatch = call.args.zip(invocation.arguments).forall {
-      case (expected: Matcher[Any] , actual) => expected.test(actual)  
+      case (expected: Matcher[_] , actual) => expected.asInstanceOf[Matcher[Any]].test(actual)  
+      case (dependencyExpected: GeneralDependency[_], actual) => env.valueFor(dependencyExpected) == Some(actual)
       case (literalExpected, actual) => literalExpected == actual
     } 
     methodMatches && aritiesMatch && argumentsMatch
