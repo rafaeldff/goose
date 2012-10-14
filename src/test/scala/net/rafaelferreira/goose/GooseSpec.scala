@@ -47,8 +47,8 @@ class GooseSpec extends Specification with ResultMatchers with Goose {
     trait Bar {def bar:String}
     
     check((_:Foo).foo + (_:Bar).bar) {(foo, bar) => 
-      _.when(foo.stub(_.foo) ==> "as").
-        and(bar.stub(_.bar) ==> "df").
+      _.when(foo(_.foo) ==> "as").
+        and(bar(_.bar) ==> "df").
         then(_ must_== "asdf")
     }
   }
@@ -58,8 +58,8 @@ class GooseSpec extends Specification with ResultMatchers with Goose {
     trait Bar {def bar:String}
     
     val fragments = check((_:Foo).foo + (_:Bar).bar) {(foo, bar) => 
-      _.when(foo.stub(_.foo) ==> "xx").
-        and(bar.stub(_.bar) ==> "xx").
+      _.when(foo(_.foo) ==> "xx").
+        and(bar(_.bar) ==> "xx").
         then(_ must_== "asdf")
     }
     
@@ -70,7 +70,7 @@ class GooseSpec extends Specification with ResultMatchers with Goose {
     trait Foo {def foo:String}
     
     check((_:Foo).foo + (_:String)) {(foo, str) => 
-      _.when(foo.stub(_.foo) ==> "as").
+      _.when(foo(_.foo) ==> "as").
         and(str ==> "df").
         then(_ must_== "asdf")
     }
@@ -89,10 +89,10 @@ class GooseSpec extends Specification with ResultMatchers with Goose {
     trait Bar {def bar:String}
     
     check((_:Foo).foo + (_:Bar).bar) {(foo, bar) => 
-      _.when(foo.stub(_.foo) ==> "as").
-        and(bar.stub(_.bar) ==> "df").
+      _.when(foo(_.foo) ==> "as").
+        and(bar(_.bar) ==> "df").
         but {
-          _.and(foo.stub(_.foo) ==> "R").
+          _.and(foo(_.foo) ==> "R").
             then(_ must_== "Rdf")
         }
     }
@@ -198,8 +198,8 @@ class GooseSpec extends Specification with ResultMatchers with Goose {
     trait Baz { def bazz:String }
 
     check((bar:Bar, baz:Baz) => bar.makeBaz.bazz) { (bar, baz) =>
-      _.when(baz.stub(_.bazz) ==> "called bazz!").
-        and(bar.stub(_.makeBaz) ==> baz).
+      _.when(baz(_.bazz) ==> "called bazz!").
+        and(bar(_.makeBaz) ==> baz).
         then(_ must_== "called bazz!")
     }
   }
@@ -209,8 +209,8 @@ class GooseSpec extends Specification with ResultMatchers with Goose {
     trait Baz { def bazz:String }
 
     check((bar:Bar, baz:Baz) => bar.makeBaz.bazz) { (bar, baz) =>
-      _.and(bar.stub(_.makeBaz) ==> baz).
-        when(baz.stub(_.bazz) ==> "called bazz!").
+      _.and(bar(_.makeBaz) ==> baz).
+        when(baz(_.bazz) ==> "called bazz!").
         then(_ must_== "called bazz!")
     }
   }
@@ -221,8 +221,8 @@ class GooseSpec extends Specification with ResultMatchers with Goose {
     trait Baz { def bazz:String }
 
     check((bar:Bar, baz:Baz) => (new Foo).op(bar.makeBaz)) { (bar, baz) =>
-      _.when(baz.stub(_.bazz) ==> "called bazz!").
-        and(bar.stub(_.makeBaz) ==> baz).
+      _.when(baz(_.bazz) ==> "called bazz!").
+        and(bar(_.makeBaz) ==> baz).
         then(_ must_== "called bazz!")
     }
   }
@@ -233,7 +233,7 @@ class GooseSpec extends Specification with ResultMatchers with Goose {
     val barObject = new Bar {}
     check((_:Foo).foo((_:Bar))) {(foo, bar) =>
       _.when(bar ==> barObject).
-        and(foo.stub(_.foo(bar)) ==> "42").
+        and(foo(_.foo(bar)) ==> "42").
         then(_ must_== "42")
     }
   }

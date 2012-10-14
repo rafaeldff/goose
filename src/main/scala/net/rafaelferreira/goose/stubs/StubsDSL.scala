@@ -22,7 +22,7 @@ trait StubsDSL { this: GooseSpecificationDSL =>
     new ReturnAssumptionFactory[T](c)
 
   trait StubDependency[T] { self: GeneralDependency[T] =>
-    def stub(methodCall: T => Any): Call[T] = macro CallMacro.capture_impl[T]
+    def apply(methodCall: T => Any): Call[T] = macro CallMacro.capture_impl[T]
   }
   
   
