@@ -6,13 +6,13 @@ organization := "net.rafaelferreira"
 
 resolvers += "sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
-scalaVersion := "2.10.0-M7"
+scalaVersion := "2.10.0-RC1"
 
-libraryDependencies +=  "org.scala-lang" % "scala-reflect" % "2.10.0-M7"
+libraryDependencies +=  "org.scala-lang" % "scala-reflect" % "2.10.0-RC1"
 
-libraryDependencies += "com.jsuereth" % "scala-arm_2.10.0-M7" % "1.2" intransitive()
+libraryDependencies += "com.jsuereth" % "scala-arm_2.10.0-RC1" % "1.2" intransitive()
 
-libraryDependencies += "org.specs2" % "specs2_2.10.0-M7" % "1.12.1.1"
+libraryDependencies += "org.specs2" %% "specs2" % "1.12.2"                       
 
 libraryDependencies += "org.mockito" % "mockito-all" % "1.9.5-rc1"
 
