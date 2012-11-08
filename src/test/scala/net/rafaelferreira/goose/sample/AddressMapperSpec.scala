@@ -10,10 +10,11 @@ class AddressMapperSpec extends Specification with Goose {
     
   def `address mapping` = check(new DatabaseBackedAddressMapper(_:Database).mapAddress(_:String)) {(database, addressId) => 
     _.when(addressId ==> "123").
-      and(database(_.find("addresses", "123")) ==> Some(Map("city" -> "789", "street" -> "999"))).
+      and(database(_.find("addresses", addressId)) ==> Some(Map("city" -> "789", "street" -> "999"))).
       and(database(_.find("cities", "789")) ==> Some(Map("name" -> "Curitiba"))).
       and(database(_.find("streets", "999")) ==> Some(Map("name" -> "St. st."))).
-      then(_ must beSome(Address(City("Curitiba"), Street("St. st.")))).but {
+      then(_ must beSome(Address(City("Curitiba"), Street("St. st.")))).
+      but {
         _.when(database(_.find("streets", "999")) ==>  None).
           then(_  must beNone)
       }.
@@ -25,10 +26,10 @@ class AddressMapperSpec extends Specification with Goose {
   
   def `street mapping` = check(new DatabaseBackedAddressMapper(_:Database).mapStreet(_:String)) {(database, streetId) =>
     _.when(streetId ==> "951").
-    and(database(_.find("streets", "951")) ==> Some(Map("name" -> "St. st."))).
-      then(_ must beSome(Street("St. st."))).but {
-        _.when(database(_.find("streets", "951")) ==>  None).
-          then(_ must_== None)
-      }
+     and(database(_.find("streets", "951")) ==> Some(Map("name" -> "St. st."))).
+     then(_ must beSome(Street("St. st."))).but {
+       _.when(database(_.find("streets", "951")) ==>  None).
+         then(_ must_== None)
+     }
   }
 }
